@@ -35,6 +35,19 @@ const EVENT_URLS = [
   'https://ny-event-radar.com',
   // Temporarily disabled - Claude extraction issues:
   // 'https://www.timeout.com/newyork/things-to-do/things-to-do-in-new-york-this-week',
+  // Venue-specific sources:
+  'https://www.beacontheatre.com/events',
+  'https://www.thebellhouseny.com/events',
+  'https://www.musichallofwilliamsburg.com/events',
+  'https://www.elsewherebrooklyn.com/events',
+  'https://www.babysallright.com/events',
+  'https://saintvitusbar.com/event',
+  'https://nationalsawdust.org/events/',
+  'https://www.knittingfactorybrooklyn.com/events',
+  'https://www.markethotel.org/events',
+  'https://www.terminal5nyc.com/events',
+  'https://www.boweryballroom.com/events',
+  'https://www.nightclub101.com/events',
 ];
 
 const CACHE_KEY = 'nyc_events';
