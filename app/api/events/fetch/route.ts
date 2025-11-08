@@ -497,6 +497,36 @@ export async function POST(request: NextRequest) {
 
     const redis = getRedis();
 
+    // Check if a scrape is already running
+    try {
+      const currentStatus = await redis.get(STATUS_KEY);
+      if (currentStatus && typeof currentStatus === 'object' && 'isRunning' in currentStatus) {
+        const status = currentStatus as { isRunning: boolean; lastUpdate: string };
+        if (status.isRunning) {
+          // Check if the job is stale (older than 10 minutes)
+          const lastUpdate = new Date(status.lastUpdate);
+          const now = new Date();
+          const minutesSinceUpdate = (now.getTime() - lastUpdate.getTime()) / 1000 / 60;
+
+          if (minutesSinceUpdate < 10) {
+            console.log('[API] Scraping already in progress, rejecting new request');
+            return NextResponse.json(
+              {
+                error: 'Scraping already in progress',
+                message: 'A scraping job is currently running. Please wait for it to complete.',
+              },
+              { status: 409 } // 409 Conflict
+            );
+          } else {
+            console.log(`[API] Found stale scraping job (${minutesSinceUpdate.toFixed(1)} minutes old), resetting and starting new one`);
+          }
+        }
+      }
+    } catch (statusCheckError) {
+      console.error('[API] Error checking scraping status:', statusCheckError);
+      // Continue anyway if we can't check status
+    }
+
     // Set initial status
     await redis.set(STATUS_KEY, {
       isRunning: true,
