@@ -87,8 +87,19 @@ export default function AdminPage() {
     }
   };
 
-  // Cleanup on unmount
+  // Fetch status on mount and start polling if scraping is in progress
   useEffect(() => {
+    const initStatus = async () => {
+      await fetchStatus();
+      // Check if we should start polling
+      const initialStatus = await fetch('/api/events/status').then(r => r.json());
+      if (initialStatus.success && initialStatus.scraping.isRunning) {
+        console.log('[Admin] Scraping in progress on mount, starting polling');
+        startPolling();
+      }
+    };
+    initStatus();
+
     return () => {
       stopPolling();
     };
@@ -211,6 +222,34 @@ export default function AdminPage() {
             <p className="text-sm text-[#8B7D6F] font-light mb-8">
               <strong>Refresh</strong> scrapes event listings (~30 sec). <strong>Hydrate</strong> enriches incomplete events with full details (~60 sec).
             </p>
+
+            {status && !isPolling && (
+              <div className="mt-8 p-6 bg-[#F0E8DB] border border-[#D4C4B0] rounded-2xl">
+                <h3 className="font-light text-[#3D3426] mb-4 text-lg">Current Status</h3>
+                <div className="space-y-2 text-sm">
+                  <p className="text-[#6B5D4F]">
+                    <strong>Scraping:</strong> {status.scraping.isRunning ? '🟢 Running' : '⚪ Idle'}
+                  </p>
+                  <p className="text-[#6B5D4F]">
+                    <strong>Sources:</strong> {status.scraping.sourcesCompleted}/{status.scraping.totalSources}
+                  </p>
+                  <p className="text-[#6B5D4F]">
+                    <strong>Events scraped:</strong> {status.scraping.eventsScraped}
+                  </p>
+                  <p className="text-[#6B5D4F]">
+                    <strong>Total events in cache:</strong> {status.totalEvents}
+                  </p>
+                  {status.scraping.currentSource && (
+                    <p className="text-[#6B5D4F]">
+                      <strong>Current source:</strong> {status.scraping.currentSource}
+                    </p>
+                  )}
+                  <p className="text-xs text-[#8B7D6F] mt-2">
+                    Last update: {new Date(status.scraping.lastUpdate).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            )}
 
             {error && (
               <div className="mt-8 p-6 bg-[#E8DED0] border border-[#C4B5A0] rounded-2xl">
