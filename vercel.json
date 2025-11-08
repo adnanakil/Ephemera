@@ -1,0 +1,20 @@
+{
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "functions": {
+    "app/api/events/fetch/route.ts": {
+      "maxDuration": 300
+    },
+    "app/api/events/hydrate/route.ts": {
+      "maxDuration": 300
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/events/fetch",
+      "schedule": "0 9 * * *"
+    }
+  ]
+}
