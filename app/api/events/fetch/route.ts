@@ -530,8 +530,8 @@ ${scrapedContent.substring(0, 200000)}`,
           }
         });
 
-        // Save incrementally after each batch
-        const activeEvents = mergedEvents; // Date filtering disabled
+        // Save incrementally after each batch (filter out past events)
+        const activeEvents = mergedEvents.filter(event => !isEventPast(event));
         const responseData = {
           success: true,
           count: activeEvents.length,
@@ -896,16 +896,19 @@ ${scrapedContent.substring(0, 200000)}`,
           // INCREMENTAL SAVE: Merge with existing and save to cache immediately
           existingEvents = mergeEvents(existingEvents, eventsWithLocation);
 
+          // Filter out past events before saving (keeps today and future events)
+          const activeEvents = existingEvents.filter(event => !isEventPast(event));
+
           const responseData = {
             success: true,
-            count: existingEvents.length,
-            events: existingEvents,
+            count: activeEvents.length,
+            events: activeEvents,
             lastFetched: new Date().toISOString(),
           };
 
           try {
             await redis.set(CACHE_KEY, responseData);
-            console.log(`[API] Incremental save: ${existingEvents.length} total events cached (${eventsWithLocation.length} new from ${url})`);
+            console.log(`[API] Incremental save: ${activeEvents.length} total events cached (${eventsWithLocation.length} new from ${url})`);
           } catch (redisError) {
             console.error('[API] Error saving to Redis:', redisError);
           }
