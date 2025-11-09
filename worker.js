@@ -7,8 +7,8 @@ require('dotenv').config({ path: '.env.local' });
 
 console.log('[Worker] Starting Ephemera background worker...');
 
-// Use Upstash Redis connection
-const connection = new IORedis(process.env.UPSTASH_REDIS_REST_URL || '', {
+// Use Upstash Redis connection (Redis protocol, not REST)
+const connection = new IORedis(process.env.REDIS_URL || '', {
   maxRetriesPerRequest: null,
   tls: {
     rejectUnauthorized: false,

@@ -1,8 +1,8 @@
 import { Queue, QueueEvents } from 'bullmq';
 import IORedis from 'ioredis';
 
-// Use Upstash Redis connection
-const connection = new IORedis(process.env.UPSTASH_REDIS_REST_URL || '', {
+// Use Upstash Redis connection (Redis protocol, not REST)
+const connection = new IORedis(process.env.REDIS_URL || '', {
   maxRetriesPerRequest: null,
   tls: {
     rejectUnauthorized: false,
