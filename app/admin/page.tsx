@@ -24,6 +24,7 @@ interface StatusData {
     totalSources: number;
     eventsScraped: number;
     lastUpdate: string;
+    errors?: string[];
   };
   geocoding: {
     total: number;
@@ -42,7 +43,10 @@ export default function AdminPage() {
   const [hydrateResult, setHydrateResult] = useState<{ hydratedCount: number; totalEvents: number; lastHydrated: string } | null>(null);
   const [status, setStatus] = useState<StatusData | null>(null);
   const [isPolling, setIsPolling] = useState(false);
+  const [startTime, setStartTime] = useState<Date | null>(null);
+  const [elapsedTime, setElapsedTime] = useState<number>(0);
   const pollingInterval = useRef<NodeJS.Timeout | null>(null);
+  const timerInterval = useRef<NodeJS.Timeout | null>(null);
 
   // Poll status endpoint
   const fetchStatus = async () => {
@@ -70,11 +74,18 @@ export default function AdminPage() {
   const startPolling = () => {
     console.log('[Admin] Starting polling...');
     setIsPolling(true);
+    setStartTime(new Date());
     fetchStatus(); // Initial fetch
 
     pollingInterval.current = setInterval(() => {
       fetchStatus();
     }, 3000); // Poll every 3 seconds
+
+    // Start elapsed time counter
+    timerInterval.current = setInterval(() => {
+      setElapsedTime(prev => prev + 1);
+    }, 1000); // Update every second
+
     console.log('[Admin] Polling started, interval ID:', pollingInterval.current);
   };
 
@@ -84,6 +95,10 @@ export default function AdminPage() {
     if (pollingInterval.current) {
       clearInterval(pollingInterval.current);
       pollingInterval.current = null;
+    }
+    if (timerInterval.current) {
+      clearInterval(timerInterval.current);
+      timerInterval.current = null;
     }
   };
 
@@ -111,41 +126,58 @@ export default function AdminPage() {
     if (status && !status.scraping.isRunning && isPolling) {
       console.log('[Admin] Stopping polling because scraping is complete');
       stopPolling();
+      setLoading(false);
+      // Show completion message
+      if (status.totalEvents > 0) {
+        setResult({
+          count: status.totalEvents,
+          lastFetched: status.lastFetched ? new Date(status.lastFetched).toLocaleString() : new Date().toLocaleString(),
+        });
+      }
     }
   }, [status, isPolling]);
+
+  // Format elapsed time
+  const formatElapsedTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const fetchEvents = async () => {
     console.log('[Admin] fetchEvents called');
     setError('');
     setResult(null);
+    setLoading(true);
+    setElapsedTime(0);
 
     try {
-      console.log('[Admin] Calling /api/events/fetch...');
-      const response = await fetch('/api/events/fetch', {
+      console.log('[Admin] Triggering background scraping job...');
+
+      // Trigger background job via queue (runs in worker with no timeout!)
+      const response = await fetch('/api/events/trigger', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
       });
 
-      console.log('[Admin] Response status:', response.status);
       const data = await response.json();
-      console.log('[Admin] Response data:', data);
+      console.log('[Admin] Job trigger response:', data);
 
       if (!response.ok) {
-        console.error('[Admin] Events API Error:', data);
-        throw new Error(data.error || 'Failed to fetch events');
+        console.error('[Admin] Failed to trigger job:', data);
+        throw new Error(data.error || 'Failed to start scraping');
       }
 
-      // Synchronous response
-      console.log('[Admin] Got response, stopping any existing polling');
-      stopPolling(); // Stop any existing polling
-      setResult({
-        count: data.count || 0,
-        lastFetched: new Date(data.lastFetched).toLocaleString(),
-      });
+      // Start polling to monitor progress
+      console.log('[Admin] Background job started, polling for progress...');
+      startPolling();
+
     } catch (err) {
       console.error('[Admin] Events fetch error:', err);
+      stopPolling();
+      setLoading(false);
       setError(err instanceof Error ? err.message : 'An error occurred');
     }
   };
@@ -205,10 +237,10 @@ export default function AdminPage() {
             <div className="flex flex-col md:flex-row gap-4 mb-8">
               <button
                 onClick={fetchEvents}
-                disabled={isPolling || hydrateLoading}
+                disabled={loading || isPolling || hydrateLoading}
                 className="px-10 py-4 bg-[#3D3426] hover:bg-[#2A231A] text-[#F5F1E8] rounded-full font-light text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-1"
               >
-                {isPolling ? 'Scraping...' : 'Refresh Events'}
+                {loading || isPolling ? 'Scraping...' : 'Refresh Events'}
               </button>
               <button
                 onClick={hydrateEvents}
@@ -220,10 +252,19 @@ export default function AdminPage() {
             </div>
 
             <p className="text-sm text-[#8B7D6F] font-light mb-8">
-              <strong>Refresh</strong> scrapes event listings (~30 sec). <strong>Hydrate</strong> enriches incomplete events with full details (~60 sec).
+              <strong>Refresh</strong> scrapes 19 event sources (~2-3 min, may timeout on free tier). <strong>Hydrate</strong> enriches incomplete events (~60 sec).
             </p>
 
-            {status && !isPolling && (
+            {status && status.scraping.sourcesCompleted > 0 && !status.scraping.isRunning && status.scraping.sourcesCompleted < status.scraping.totalSources && (
+              <div className="mb-8 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+                <p className="text-sm text-yellow-800">
+                  ⚠️ <strong>Incomplete scrape:</strong> Only {status.scraping.sourcesCompleted}/{status.scraping.totalSources} sources completed.
+                  Vercel free tier limits functions to 60 seconds. Consider refreshing again or upgrading to Vercel Pro for full scraping.
+                </p>
+              </div>
+            )}
+
+            {status && !isPolling && !loading && (
               <div className="mt-8 p-6 bg-[#F0E8DB] border border-[#D4C4B0] rounded-2xl">
                 <h3 className="font-light text-[#3D3426] mb-4 text-lg">Current Status</h3>
                 <div className="space-y-2 text-sm">
@@ -258,9 +299,28 @@ export default function AdminPage() {
               </div>
             )}
 
-            {isPolling && status && (
+            {(loading || isPolling) && status && (
               <div className="mt-8 p-6 bg-[#F0E8DB] border border-[#D4C4B0] rounded-2xl">
-                <h3 className="font-light text-[#3D3426] mb-4 text-lg">Live Progress</h3>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-light text-[#3D3426] text-lg">Live Progress</h3>
+                  <div className="text-[#6B5D4F] font-light text-sm">
+                    ⏱️ {formatElapsedTime(elapsedTime)}
+                  </div>
+                </div>
+
+                {/* Status Indicator */}
+                <div className="mb-4 p-3 bg-white rounded-lg border border-[#E0D5C7]">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm text-[#3D3426] font-medium">
+                      {status.scraping.currentSource
+                        ? `Scraping: ${status.scraping.currentSource}`
+                        : status.scraping.sourcesCompleted < status.scraping.totalSources
+                          ? 'Initializing...'
+                          : 'Processing events...'}
+                    </span>
+                  </div>
+                </div>
 
                 {/* Scraping Progress */}
                 <div className="mb-6">
@@ -268,6 +328,9 @@ export default function AdminPage() {
                     <span className="text-[#6B5D4F] font-light">Scraping Sources</span>
                     <span className="text-[#3D3426] font-medium">
                       {status.scraping.sourcesCompleted}/{status.scraping.totalSources}
+                      <span className="text-xs text-[#8B7D6F] ml-2">
+                        ({Math.round((status.scraping.sourcesCompleted / status.scraping.totalSources) * 100)}%)
+                      </span>
                     </span>
                   </div>
                   <div className="w-full bg-[#E0D5C7] rounded-full h-2.5">
@@ -276,23 +339,26 @@ export default function AdminPage() {
                       style={{ width: `${(status.scraping.sourcesCompleted / status.scraping.totalSources) * 100}%` }}
                     ></div>
                   </div>
-                  {status.scraping.currentSource && (
-                    <p className="mt-2 text-sm text-[#8B7D6F] font-light">
-                      Currently scraping: {status.scraping.currentSource}
+                  <p className="mt-2 text-sm text-[#8B7D6F] font-light">
+                    ✓ {status.scraping.eventsScraped} events extracted
+                  </p>
+                  {status.scraping.sourcesCompleted > 0 && (
+                    <p className="mt-1 text-xs text-[#8B7D6F] font-light">
+                      Average: ~{Math.round(status.scraping.eventsScraped / status.scraping.sourcesCompleted)} events per source
                     </p>
                   )}
-                  <p className="mt-1 text-sm text-[#8B7D6F] font-light">
-                    {status.scraping.eventsScraped} events found so far
-                  </p>
                 </div>
 
                 {/* Geocoding Progress */}
                 {status.geocoding.total > 0 && (
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-[#6B5D4F] font-light">Geocoding</span>
+                      <span className="text-[#6B5D4F] font-light">Geocoding Events</span>
                       <span className="text-[#3D3426] font-medium">
                         {status.geocoding.geocoded}/{status.geocoding.total}
+                        <span className="text-xs text-[#8B7D6F] ml-2">
+                          ({Math.round((status.geocoding.geocoded / status.geocoding.total) * 100)}%)
+                        </span>
                       </span>
                     </div>
                     <div className="w-full bg-[#E0D5C7] rounded-full h-2.5">
@@ -301,15 +367,40 @@ export default function AdminPage() {
                         style={{ width: `${(status.geocoding.geocoded / status.geocoding.total) * 100}%` }}
                       ></div>
                     </div>
-                    <p className="mt-1 text-sm text-[#8B7D6F] font-light">
-                      {status.geocoding.remaining} events remaining
+                    <p className="mt-2 text-sm text-[#8B7D6F] font-light">
+                      📍 {status.geocoding.remaining} locations remaining
                     </p>
                   </div>
                 )}
 
-                <p className="mt-4 text-xs text-[#8B7D6F] font-light">
-                  Last updated: {new Date(status.scraping.lastUpdate).toLocaleTimeString()}
-                </p>
+                {/* Errors Section */}
+                {status.scraping.errors && status.scraping.errors.length > 0 && (
+                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <h4 className="text-sm font-medium text-red-800 mb-2">⚠️ Recent Errors:</h4>
+                    <ul className="text-xs text-red-700 space-y-1">
+                      {status.scraping.errors.map((error, idx) => (
+                        <li key={idx} className="font-mono">• {error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Last Update Time */}
+                <div className="mt-4 pt-4 border-t border-[#D4C4B0]">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-[#8B7D6F] font-light">
+                      Last API update: {new Date(status.scraping.lastUpdate).toLocaleTimeString()}
+                    </span>
+                    <span className="text-[#8B7D6F] font-light">
+                      {(() => {
+                        const secondsSinceUpdate = Math.floor((Date.now() - new Date(status.scraping.lastUpdate).getTime()) / 1000);
+                        return secondsSinceUpdate > 30
+                          ? `⚠️ ${secondsSinceUpdate}s since last update`
+                          : `✓ Active (${secondsSinceUpdate}s ago)`;
+                      })()}
+                    </span>
+                  </div>
+                </div>
               </div>
             )}
 

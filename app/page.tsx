@@ -60,16 +60,74 @@ export default function Home() {
     loadCachedEvents();
   }, []);
 
-  // Filter events based on borough and neighborhood
-  const filteredEvents = events.filter((event) => {
-    const boroughMatch = selectedBorough === 'All' || event.borough === selectedBorough;
-    const neighborhoodMatch =
-      neighborhoodSearch === '' ||
-      event.neighborhood?.toLowerCase().includes(neighborhoodSearch.toLowerCase()) ||
-      event.location?.toLowerCase().includes(neighborhoodSearch.toLowerCase());
+  // Helper function to parse date from time string
+  const parseEventDate = (timeString: string): Date | null => {
+    if (!timeString) return null;
 
-    return boroughMatch && neighborhoodMatch;
-  });
+    const months: Record<string, number> = {
+      'january': 0, 'february': 1, 'march': 2, 'april': 3, 'may': 4, 'june': 5,
+      'july': 6, 'august': 7, 'september': 8, 'october': 9, 'november': 10, 'december': 11,
+      'jan': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'jun': 5, 'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'dec': 11
+    };
+
+    const lowerTime = timeString.toLowerCase();
+    let month: number | null = null;
+    let day: number | null = null;
+
+    // Find month
+    for (const [monthName, monthNum] of Object.entries(months)) {
+      if (lowerTime.includes(monthName)) {
+        month = monthNum;
+        // Try to find day number after month
+        const afterMonth = timeString.substring(lowerTime.indexOf(monthName) + monthName.length);
+        const dayMatch = afterMonth.match(/\d+/);
+        if (dayMatch) {
+          day = parseInt(dayMatch[0]);
+        }
+        break;
+      }
+    }
+
+    if (month !== null && day !== null) {
+      // Use current year, or next year if the month has passed
+      const now = new Date();
+      let year = now.getFullYear();
+      const eventDate = new Date(year, month, day);
+
+      // If event date is more than 30 days in the past, assume it's next year
+      if (eventDate < now && (now.getTime() - eventDate.getTime()) > 30 * 24 * 60 * 60 * 1000) {
+        year += 1;
+      }
+
+      return new Date(year, month, day);
+    }
+
+    return null;
+  };
+
+  // Filter events based on borough and neighborhood
+  const filteredEvents = events
+    .filter((event) => {
+      const boroughMatch = selectedBorough === 'All' || event.borough === selectedBorough;
+      const neighborhoodMatch =
+        neighborhoodSearch === '' ||
+        event.neighborhood?.toLowerCase().includes(neighborhoodSearch.toLowerCase()) ||
+        event.location?.toLowerCase().includes(neighborhoodSearch.toLowerCase());
+
+      return boroughMatch && neighborhoodMatch;
+    })
+    .sort((a, b) => {
+      // Sort by date, soonest first
+      const dateA = parseEventDate(a.time);
+      const dateB = parseEventDate(b.time);
+
+      // Events with no date go to the end
+      if (!dateA && !dateB) return 0;
+      if (!dateA) return 1;
+      if (!dateB) return -1;
+
+      return dateA.getTime() - dateB.getTime();
+    });
 
   return (
     <div className="min-h-screen bg-[#F5F1E8] text-[#3D3426]">

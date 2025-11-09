@@ -61,6 +61,76 @@ async function verifyQStashSignature(request: NextRequest): Promise<boolean> {
   return true;
 }
 
+// Helper function to infer actual date from day-of-week references
+function inferDateFromDayOfWeek(timeString: string): string {
+  if (!timeString) return timeString;
+
+  // Check if the time string contains only day-of-week without a month name
+  const hasMonthName = /(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/i.test(timeString);
+
+  if (hasMonthName) {
+    // Already has a proper date, return as-is
+    return timeString;
+  }
+
+  // Map day names to numbers (0 = Sunday, 6 = Saturday)
+  const dayMap: Record<string, number> = {
+    'sunday': 0, 'sun': 0,
+    'monday': 1, 'mon': 1,
+    'tuesday': 2, 'tue': 2, 'tues': 2,
+    'wednesday': 3, 'wed': 3,
+    'thursday': 4, 'thu': 4, 'thur': 4, 'thurs': 4,
+    'friday': 5, 'fri': 5,
+    'saturday': 6, 'sat': 6
+  };
+
+  // Try to find a day-of-week name
+  const lowerTime = timeString.toLowerCase();
+  let targetDayIndex = -1;
+  let dayName = '';
+
+  for (const [name, index] of Object.entries(dayMap)) {
+    if (lowerTime.includes(name)) {
+      targetDayIndex = index;
+      dayName = name;
+      break;
+    }
+  }
+
+  if (targetDayIndex === -1) {
+    // No day-of-week found, return as-is
+    return timeString;
+  }
+
+  // Get current date in Eastern Time
+  const nowUTC = new Date();
+  const nowET = new Date(nowUTC.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  const currentDayIndex = nowET.getDay();
+
+  // Calculate days until target day (looking forward)
+  let daysUntil = targetDayIndex - currentDayIndex;
+  if (daysUntil < 0) {
+    daysUntil += 7; // Next week
+  }
+  if (daysUntil === 0 && lowerTime.includes('next')) {
+    daysUntil = 7; // Next week if "next" is mentioned
+  }
+
+  // Create the target date
+  const targetDate = new Date(nowET);
+  targetDate.setDate(targetDate.getDate() + daysUntil);
+
+  // Format as "Month Day"
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                      'July', 'August', 'September', 'October', 'November', 'December'];
+  const month = monthNames[targetDate.getMonth()];
+  const day = targetDate.getDate();
+
+  // Replace the day name with the actual date
+  const regex = new RegExp(dayName + '\\s*,?\\s*', 'gi');
+  return timeString.replace(regex, `${month} ${day}, `);
+}
+
 // Helper function to check if an event is past/old
 function isEventPast(event: Event): boolean {
   if (!event.time) return false; // Keep events with no time
@@ -108,12 +178,11 @@ function isEventPast(event: Event): boolean {
   // Construct the event date in Eastern Time
   const eventDate = new Date(currentYear, month, day);
 
-  // If event date is in the past (before yesterday in ET), consider it old
-  const yesterdayET = new Date(nowET);
-  yesterdayET.setDate(yesterdayET.getDate() - 1);
-  yesterdayET.setHours(0, 0, 0, 0); // Start of yesterday
+  // If event date is in the past (before today in ET), consider it old
+  const todayET = new Date(nowET);
+  todayET.setHours(0, 0, 0, 0); // Start of today
 
-  return eventDate < yesterdayET;
+  return eventDate < todayET;
 }
 
 async function fetchEventsLogic() {
@@ -164,6 +233,7 @@ async function fetchEventsLogic() {
     };
 
     let totalNewEvents = 0;
+    const errors: string[] = [];
 
     // Scrape each URL and save incrementally
     for (let i = 0; i < EVENT_URLS.length; i++) {
@@ -180,6 +250,7 @@ async function fetchEventsLogic() {
           totalSources: EVENT_URLS.length,
           eventsScraped: totalNewEvents,
           lastUpdate: new Date().toISOString(),
+          errors: errors.slice(-5), // Keep last 5 errors
         });
       } catch (statusError) {
         console.error('[API] Error updating status:', statusError);
@@ -249,7 +320,9 @@ async function fetchEventsLogic() {
 
         // If both scrapers failed, skip this URL
         if (!scrapedContent) {
-          console.error(`[API] Both Firecrawl and Scrapfly failed for ${url}`);
+          const errorMsg = `Scrapers failed for ${url.substring(0, 50)}...`;
+          console.error(`[API] ${errorMsg}`);
+          errors.push(errorMsg);
           continue;
         }
 
@@ -260,7 +333,10 @@ async function fetchEventsLogic() {
           apiKey: anthropicApiKey,
         });
 
-        const response = await anthropic.messages.create({
+        let response;
+        try {
+          console.log(`[API] Calling Claude API for ${url}...`);
+          response = await anthropic.messages.create({
           model: 'claude-haiku-4-5',
           max_tokens: 8192,
           messages: [
@@ -271,21 +347,27 @@ async function fetchEventsLogic() {
 For each event, provide:
 - title: The event name
 - description: Brief description (2-3 sentences max)
-- time: FULL date and time (MUST include the day/date like "October 30" or "Nov 1st", plus the time like "7:00 PM". Never just the time alone!)
+- time: FULL date and time (MUST include the MONTH and DAY NUMBER like "November 9" or "Dec 15", plus the time like "7:00 PM". NEVER use day-of-week names like "Saturday" or "Thursday" alone!)
 - location: Where it takes place (be specific, include neighborhood or venue name)
 - category: Choose ONE category that best fits the event from these options: "Cultural & Arts", "Fitness & Wellness", "Sports & Recreation", "Markets & Shopping", "Community & Volunteering", "Food & Dining", "Holiday & Seasonal", "Professional & Networking", "Educational & Literary"
 - link: URL to event page (if available)
 - ticketLink: URL to buy tickets (if available)
 
-CRITICAL REQUIREMENTS:
+CRITICAL REQUIREMENTS FOR DATES:
+1. ALWAYS use MONTH + DAY format: "November 9", "December 15", "Jan 20"
+2. NEVER use ONLY day-of-week names like "Saturday", "Thursday", "Monday"
+3. NEVER use relative dates like "Today", "Tomorrow", "This Weekend"
+4. If the page shows "Saturday, November 9 at 7:00 PM" - extract as "November 9, 7:00 PM"
+5. If the page shows "This Saturday 7:00 PM" and you can see context that it's Nov 9 - extract as "November 9, 7:00 PM"
+6. Look for date indicators in headings, sections, calendars, or near the event to find the actual date
+7. If you can only find the time (like "7:30 PM") but the date is in a section heading above it, combine them!
+8. It's better to skip an event than to use a day-of-week name without the actual date
+
+OTHER REQUIREMENTS:
 1. Extract EVERY SINGLE event on the page - DO NOT stop after a few events
 2. If there are 50 events on the page, extract all 50
 3. If there are 100 events on the page, extract all 100
-4. For the time field, always extract the COMPLETE date and time
-5. Look for date indicators in headings, sections, or near the event
-6. If you can only find the time (like "7:30 PM") but the date is in a section heading, combine them!
-7. For the category field, analyze the event content and assign the most appropriate category
-8. NEVER use relative dates like "Today", "Tomorrow", "This Weekend" - ALWAYS use absolute dates like "November 7", "December 15", etc.
+4. For the category field, analyze the event content and assign the most appropriate category
 
 Return ONLY a valid JSON array of events, nothing else. NO explanatory text, NO comments.
 Format:
@@ -295,7 +377,15 @@ Content to parse:
 ${scrapedContent.substring(0, 200000)}`,
             },
           ],
-        });
+          });
+          console.log(`[API] Claude API call successful for ${url}`);
+        } catch (claudeError) {
+          const errorMsg = `Claude API failed for ${url.substring(0, 40)}: ${claudeError instanceof Error ? claudeError.message : String(claudeError)}`;
+          console.error(`[API] ${errorMsg}`);
+          console.error(`[API] Full error:`, claudeError);
+          errors.push(errorMsg);
+          continue;
+        }
 
         let eventsText = '';
         for (const block of response.content) {
@@ -334,8 +424,11 @@ ${scrapedContent.substring(0, 200000)}`,
           const eventsWithLocation = await Promise.all(
             events.map(async (event: Event) => {
               const { borough, neighborhood, lat, lng } = await parseLocation(event.location || '', false);
+              // Infer actual dates from day-of-week references
+              const inferredTime = inferDateFromDayOfWeek(event.time || '');
               return {
                 ...event,
+                time: inferredTime,
                 borough,
                 neighborhood,
                 lat,
@@ -365,9 +458,8 @@ ${scrapedContent.substring(0, 200000)}`,
           // INCREMENTAL SAVE: Merge with existing and save to cache immediately
           existingEvents = mergeEvents(existingEvents, eventsWithLocation);
 
-          // Filter out past events before saving
-          // TEMPORARY: Disabled date filtering due to system clock being set to 2025
-          const activeEvents = existingEvents; // .filter(event => !isEventPast(event));
+          // Filter out past events before saving (keeps today and future events)
+          const activeEvents = existingEvents.filter(event => !isEventPast(event));
 
           const responseData = {
             success: true,
@@ -460,8 +552,7 @@ ${scrapedContent.substring(0, 200000)}`,
     }
 
     // Filter out past events (already done in incremental saves, but do final check)
-    // TEMPORARY: Disabled date filtering due to system clock being set to 2025
-    const activeEvents = mergedEvents; // .filter(event => !isEventPast(event));
+    const activeEvents = mergedEvents.filter(event => !isEventPast(event));
     const removedCount = mergedEvents.length - activeEvents.length;
     if (removedCount > 0) {
       console.log(`[API] Removed ${removedCount} past events in final pass`);
@@ -583,6 +674,7 @@ export async function POST(request: NextRequest) {
     };
 
     let totalNewEvents = 0;
+    const errors: string[] = [];
 
     // Scrape each URL and save incrementally
     for (let i = 0; i < EVENT_URLS.length; i++) {
@@ -598,6 +690,7 @@ export async function POST(request: NextRequest) {
           totalSources: EVENT_URLS.length,
           eventsScraped: totalNewEvents,
           lastUpdate: new Date().toISOString(),
+          errors: errors.slice(-5), // Keep last 5 errors
         });
       } catch (statusError) {
         console.error('[API] Error updating status:', statusError);
@@ -667,7 +760,9 @@ export async function POST(request: NextRequest) {
 
         // If both scrapers failed, skip this URL
         if (!scrapedContent) {
-          console.error(`[API] Both Firecrawl and Scrapfly failed for ${url}`);
+          const errorMsg = `Scrapers failed for ${url.substring(0, 50)}...`;
+          console.error(`[API] ${errorMsg}`);
+          errors.push(errorMsg);
           continue;
         }
 
@@ -678,7 +773,10 @@ export async function POST(request: NextRequest) {
           apiKey: anthropicApiKey,
         });
 
-        const response = await anthropic.messages.create({
+        let response;
+        try {
+          console.log(`[API] Calling Claude API for ${url}...`);
+          response = await anthropic.messages.create({
           model: 'claude-haiku-4-5',
           max_tokens: 8192,
           messages: [
@@ -689,21 +787,27 @@ export async function POST(request: NextRequest) {
 For each event, provide:
 - title: The event name
 - description: Brief description (2-3 sentences max)
-- time: FULL date and time (MUST include the day/date like "October 30" or "Nov 1st", plus the time like "7:00 PM". Never just the time alone!)
+- time: FULL date and time (MUST include the MONTH and DAY NUMBER like "November 9" or "Dec 15", plus the time like "7:00 PM". NEVER use day-of-week names like "Saturday" or "Thursday" alone!)
 - location: Where it takes place (be specific, include neighborhood or venue name)
 - category: Choose ONE category that best fits the event from these options: "Cultural & Arts", "Fitness & Wellness", "Sports & Recreation", "Markets & Shopping", "Community & Volunteering", "Food & Dining", "Holiday & Seasonal", "Professional & Networking", "Educational & Literary"
 - link: URL to event page (if available)
 - ticketLink: URL to buy tickets (if available)
 
-CRITICAL REQUIREMENTS:
+CRITICAL REQUIREMENTS FOR DATES:
+1. ALWAYS use MONTH + DAY format: "November 9", "December 15", "Jan 20"
+2. NEVER use ONLY day-of-week names like "Saturday", "Thursday", "Monday"
+3. NEVER use relative dates like "Today", "Tomorrow", "This Weekend"
+4. If the page shows "Saturday, November 9 at 7:00 PM" - extract as "November 9, 7:00 PM"
+5. If the page shows "This Saturday 7:00 PM" and you can see context that it's Nov 9 - extract as "November 9, 7:00 PM"
+6. Look for date indicators in headings, sections, calendars, or near the event to find the actual date
+7. If you can only find the time (like "7:30 PM") but the date is in a section heading above it, combine them!
+8. It's better to skip an event than to use a day-of-week name without the actual date
+
+OTHER REQUIREMENTS:
 1. Extract EVERY SINGLE event on the page - DO NOT stop after a few events
 2. If there are 50 events on the page, extract all 50
 3. If there are 100 events on the page, extract all 100
-4. For the time field, always extract the COMPLETE date and time
-5. Look for date indicators in headings, sections, or near the event
-6. If you can only find the time (like "7:30 PM") but the date is in a section heading, combine them!
-7. For the category field, analyze the event content and assign the most appropriate category
-8. NEVER use relative dates like "Today", "Tomorrow", "This Weekend" - ALWAYS use absolute dates like "November 7", "December 15", etc.
+4. For the category field, analyze the event content and assign the most appropriate category
 
 Return ONLY a valid JSON array of events, nothing else. NO explanatory text, NO comments.
 Format:
@@ -713,7 +817,15 @@ Content to parse:
 ${scrapedContent.substring(0, 200000)}`,
             },
           ],
-        });
+          });
+          console.log(`[API] Claude API call successful for ${url}`);
+        } catch (claudeError) {
+          const errorMsg = `Claude API failed for ${url.substring(0, 40)}: ${claudeError instanceof Error ? claudeError.message : String(claudeError)}`;
+          console.error(`[API] ${errorMsg}`);
+          console.error(`[API] Full error:`, claudeError);
+          errors.push(errorMsg);
+          continue;
+        }
 
         let eventsText = '';
         for (const block of response.content) {
@@ -751,8 +863,11 @@ ${scrapedContent.substring(0, 200000)}`,
           const eventsWithLocation = await Promise.all(
             events.map(async (event: Event) => {
               const { borough, neighborhood, lat, lng } = await parseLocation(event.location || '', false);
+              // Infer actual dates from day-of-week references
+              const inferredTime = inferDateFromDayOfWeek(event.time || '');
               return {
                 ...event,
+                time: inferredTime,
                 borough,
                 neighborhood,
                 lat,
