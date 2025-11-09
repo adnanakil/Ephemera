@@ -37,7 +37,7 @@ const EVENT_URLS = [
   // 'https://www.timeout.com/newyork/things-to-do/things-to-do-in-new-york-this-week',
   // Venue-specific sources:
   'https://www.beacontheatre.com/events',
-  'https://www.thebellhouseny.com/events',
+  'https://www.thebellhouseny.com/shows',
   'https://www.musichallofwilliamsburg.com/events',
   'https://www.elsewherebrooklyn.com/events',
   'https://www.babysallright.com/events',
