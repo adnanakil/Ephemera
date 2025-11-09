@@ -36,18 +36,18 @@ const EVENT_URLS = [
   // Temporarily disabled - Claude extraction issues:
   // 'https://www.timeout.com/newyork/things-to-do/things-to-do-in-new-york-this-week',
   // Venue-specific sources:
-  'https://www.beacontheatre.com/events',
+  'https://www.msg.com/beacon-theatre/calendar?venue=beacon-theatre&venues=KovZpZAEAd6A',
   'https://www.thebellhouseny.com/shows',
   'https://www.musichallofwilliamsburg.com/events',
   'https://www.elsewherebrooklyn.com/events',
-  'https://www.babysallright.com/events',
-  'https://saintvitusbar.com/event',
+  'https://wl.eventim.us/BabysAllRightBrooklyn',
+  'https://www.saintvitusbar.com/events',
   'https://nationalsawdust.org/events/',
   'https://www.knittingfactorybrooklyn.com/events',
-  'https://www.markethotel.org/events',
+  'https://www.markethotel.org/calendar#/events',
   'https://www.terminal5nyc.com/events',
   'https://www.boweryballroom.com/events',
-  'https://www.nightclub101.com/events',
+  'https://www.ticketweb.com/venue/night-club-101-new-york-ny/686683',
 ];
 
 const CACHE_KEY = 'nyc_events';
