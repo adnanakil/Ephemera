@@ -47,7 +47,7 @@ const EVENT_URLS = [
   'https://www.markethotel.org/calendar#/events',
   'https://www.terminal5nyc.com/events',
   'https://www.boweryballroom.com/events',
-  'https://www.ticketweb.com/venue/night-club-101-new-york-ny/686683',
+  // 'https://www.ticketweb.com/venue/night-club-101-new-york-ny/686683', // Disabled - blocked by bot detection
 ];
 
 const CACHE_KEY = 'nyc_events';
