@@ -407,8 +407,26 @@ ${scrapedContent.substring(0, 200000)}`,
 
         // Parse the JSON response from Claude
         try {
-          // Extract JSON array from the response
-          const jsonMatch = eventsText.match(/\[[\s\S]*\]/);
+          // First try to extract JSON array
+          let jsonMatch = eventsText.match(/\[[\s\S]*\]/);
+
+          // If no array found, try to extract JSON object (might be {"events": [...]})
+          if (!jsonMatch) {
+            const objectMatch = eventsText.match(/\{[\s\S]*\}/);
+            if (objectMatch) {
+              try {
+                const parsed = JSON.parse(objectMatch[0]);
+                // Look for events array in common property names
+                if (parsed.events && Array.isArray(parsed.events)) {
+                  jsonMatch = [JSON.stringify(parsed.events)];
+                  console.log(`[API] Found nested events array for ${url}`);
+                }
+              } catch {
+                // Ignore parse errors, will be caught below
+              }
+            }
+          }
+
           if (!jsonMatch) {
             console.error(`[API] No JSON array found in response for ${url}`);
             continue;
@@ -847,8 +865,26 @@ ${scrapedContent.substring(0, 200000)}`,
 
         // Parse the JSON response from Claude
         try {
-          // Extract JSON array from the response
-          const jsonMatch = eventsText.match(/\[[\s\S]*\]/);
+          // First try to extract JSON array
+          let jsonMatch = eventsText.match(/\[[\s\S]*\]/);
+
+          // If no array found, try to extract JSON object (might be {"events": [...]})
+          if (!jsonMatch) {
+            const objectMatch = eventsText.match(/\{[\s\S]*\}/);
+            if (objectMatch) {
+              try {
+                const parsed = JSON.parse(objectMatch[0]);
+                // Look for events array in common property names
+                if (parsed.events && Array.isArray(parsed.events)) {
+                  jsonMatch = [JSON.stringify(parsed.events)];
+                  console.log(`[API] Found nested events array for ${url}`);
+                }
+              } catch {
+                // Ignore parse errors, will be caught below
+              }
+            }
+          }
+
           if (!jsonMatch) {
             console.error(`[API] No JSON array found in response for ${url}`);
             continue;
