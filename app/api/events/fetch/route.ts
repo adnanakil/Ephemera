@@ -407,23 +407,33 @@ ${scrapedContent.substring(0, 200000)}`,
 
         // Parse the JSON response from Claude
         try {
+          // Log first/last 200 chars to debug
+          console.log(`[API] Response preview for ${url}:`);
+          console.log(`[API] First 200 chars: ${eventsText.substring(0, 200)}`);
+          console.log(`[API] Last 200 chars: ${eventsText.substring(Math.max(0, eventsText.length - 200))}`);
+
           // First try to extract JSON array
           let jsonMatch = eventsText.match(/\[[\s\S]*\]/);
 
           // If no array found, try to extract JSON object (might be {"events": [...]})
           if (!jsonMatch) {
+            console.log(`[API] No array found for ${url}, trying object match...`);
             const objectMatch = eventsText.match(/\{[\s\S]*\}/);
             if (objectMatch) {
+              console.log(`[API] Object match found for ${url}, length: ${objectMatch[0].length}`);
               try {
                 const parsed = JSON.parse(objectMatch[0]);
+                console.log(`[API] Parsed object keys for ${url}: ${Object.keys(parsed).join(', ')}`);
                 // Look for events array in common property names
                 if (parsed.events && Array.isArray(parsed.events)) {
                   jsonMatch = [JSON.stringify(parsed.events)];
-                  console.log(`[API] Found nested events array for ${url}`);
+                  console.log(`[API] Found nested events array for ${url} with ${parsed.events.length} events`);
                 }
-              } catch {
-                // Ignore parse errors, will be caught below
+              } catch (parseError) {
+                console.log(`[API] Failed to parse object for ${url}: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
               }
+            } else {
+              console.log(`[API] No object match found for ${url}`);
             }
           }
 
@@ -865,23 +875,33 @@ ${scrapedContent.substring(0, 200000)}`,
 
         // Parse the JSON response from Claude
         try {
+          // Log first/last 200 chars to debug
+          console.log(`[API] Response preview for ${url}:`);
+          console.log(`[API] First 200 chars: ${eventsText.substring(0, 200)}`);
+          console.log(`[API] Last 200 chars: ${eventsText.substring(Math.max(0, eventsText.length - 200))}`);
+
           // First try to extract JSON array
           let jsonMatch = eventsText.match(/\[[\s\S]*\]/);
 
           // If no array found, try to extract JSON object (might be {"events": [...]})
           if (!jsonMatch) {
+            console.log(`[API] No array found for ${url}, trying object match...`);
             const objectMatch = eventsText.match(/\{[\s\S]*\}/);
             if (objectMatch) {
+              console.log(`[API] Object match found for ${url}, length: ${objectMatch[0].length}`);
               try {
                 const parsed = JSON.parse(objectMatch[0]);
+                console.log(`[API] Parsed object keys for ${url}: ${Object.keys(parsed).join(', ')}`);
                 // Look for events array in common property names
                 if (parsed.events && Array.isArray(parsed.events)) {
                   jsonMatch = [JSON.stringify(parsed.events)];
-                  console.log(`[API] Found nested events array for ${url}`);
+                  console.log(`[API] Found nested events array for ${url} with ${parsed.events.length} events`);
                 }
-              } catch {
-                // Ignore parse errors, will be caught below
+              } catch (parseError) {
+                console.log(`[API] Failed to parse object for ${url}: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
               }
+            } else {
+              console.log(`[API] No object match found for ${url}`);
             }
           }
 
