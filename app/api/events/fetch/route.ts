@@ -456,11 +456,11 @@ ${scrapedContent.substring(0, 200000)}`,
           }
 
           // Parse location to add borough, neighborhood, and coordinates
-          // Static parsing only during scraping (fast)
+          // Enable geocoding for new events (with built-in rate limiting and error handling)
           console.log(`[API] Processing locations for ${events.length} events from ${url}...`);
           const eventsWithLocation = await Promise.all(
             events.map(async (event: Event) => {
-              const { borough, neighborhood, lat, lng } = await parseLocation(event.location || '', false);
+              const { borough, neighborhood, lat, lng } = await parseLocation(event.location || '', true);
               // Infer actual dates from day-of-week references
               const inferredTime = inferDateFromDayOfWeek(event.time || '');
               return {
