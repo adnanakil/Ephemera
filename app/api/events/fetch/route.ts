@@ -47,6 +47,15 @@ const EVENT_URLS = [
   'https://www.markethotel.org/calendar#/events',
   'https://www.terminal5nyc.com/events',
   'https://www.boweryballroom.com/events',
+  // Additional NYC venues:
+  'https://www.bowerypresents.com/venues/brooklyn-steel',
+  'https://www.roughtradenyc.com/calendar/',
+  'https://www.bowerypresents.com/shows/webster-hall',
+  'https://www.brooklynbowl.com/brooklyn/shows/all',
+  'https://www.irvingplaza.com/shows',
+  'https://sobs.com/events',
+  'https://mercuryeastpresents.com/war-saw/',
+  'https://www.thegramercytheatre.com/',
   // 'https://www.ticketweb.com/venue/night-club-101-new-york-ny/686683', // Disabled - blocked by bot detection
 ];
 
