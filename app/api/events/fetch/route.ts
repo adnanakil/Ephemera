@@ -43,7 +43,7 @@ const EVENT_URLS = [
   'https://wl.eventim.us/BabysAllRightBrooklyn',
   'https://www.saintvitusbar.com/events',
   'https://nationalsawdust.org/events/',
-  'https://www.knittingfactorybrooklyn.com/events',
+  'https://bk.knittingfactory.com/calendar/',
   'https://www.markethotel.org/calendar#/events',
   'https://www.terminal5nyc.com/events',
   'https://www.boweryballroom.com/events',
