@@ -68,6 +68,15 @@ const EVENT_URLS = [
   'https://www.thedelancey.com/events',
   'https://berlin.nyc',
   'https://www.arlenesgrocerynyc.com/upcoming-events',
+  // Brooklyn small venues:
+  'https://www.petescandystore.com/calendar/',
+  'https://tveyenyc.com/calendar/',
+  'https://www.thetinycupboard.com/calendar',
+  'https://www.eastvillecomedy.com/calendar',
+  // Manhattan comedy clubs:
+  'https://newyorkcomedyclub.com/calendar',
+  'https://www.gothamcomedyclub.com/calendar',
+  'https://www.westsidecomedyclub.com/calendar',
 ];
 
 const CACHE_KEY = 'nyc_events';
