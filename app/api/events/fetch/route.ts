@@ -77,6 +77,16 @@ const EVENT_URLS = [
   'https://newyorkcomedyclub.com/calendar',
   'https://www.gothamcomedyclub.com/calendar',
   'https://www.westsidecomedyclub.com/calendar',
+  // More Brooklyn venues:
+  'https://www.barclayscenter.com/events',
+  'https://wl.seetickets.us/BabysAllRightBrooklyn',
+  'https://www.elsewhere.club/events',
+  'https://www.musichallofwilliamsburg.com/calendar/',
+  'https://www.houseofyes.org/calendar',
+  'https://littlefieldnyc.com/all-shows/',
+  'https://www.unionhallny.com/calendar',
+  'https://publicrecords.nyc',
+  'https://www.kingstheatre.com/events/',
 ];
 
 const CACHE_KEY = 'nyc_events';
