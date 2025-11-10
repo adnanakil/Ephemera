@@ -91,6 +91,32 @@ const EVENT_URLS = [
   'https://www.symphonyspace.org/events',
   'https://www.bam.org',
   'https://www.nationalsawdust.org/performances',
+  'https://www.lincolncenter.org/lincoln-center-at-home/calendar',
+  'https://www.carnegiehall.org/Events',
+  'https://www.apollotheater.org/ticket-and-events',
+  // Jazz Clubs:
+  'https://www.villagevanguard.com',
+  'https://www.bluenotejazz.com',
+  'https://www.smokesjazzclub.com',
+  'https://www.jazzmusicnyc.com',
+  'https://www.jazz966.org',
+  // Queens Venues:
+  'https://www.queenstheatre.org/events',
+  'https://www.thesidefarm.com/events',
+  'https://thekitchenqueens.com',
+  // Additional Brooklyn:
+  'https://www.brooklynnights.com/events',
+  'https://www.bazaar.nyc/calendar',
+  // More Manhattan:
+  'https://www.sohousenyc.com/events',
+  'https://www.cielo-club.com',
+  'https://www.parkavenyc.com/events',
+  'https://www.marquisclub.net/calendar',
+  // Art & Cultural Spaces:
+  'https://www.moma.org/calendar',
+  'https://www.metmuseum.org/events',
+  'https://www.brooklynmuseum.org/calendar',
+  'https://www.guggenheim.org/event',
 ];
 
 const CACHE_KEY = 'nyc_events';
