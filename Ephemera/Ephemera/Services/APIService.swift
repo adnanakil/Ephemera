@@ -11,7 +11,7 @@ class APIService {
     static let shared = APIService()
 
     // Update this to your production URL
-    private let baseURL = "https://ephemera-1hzgkzq5j-adnans-projects-b544affb.vercel.app"
+    private let baseURL = "https://ephemera-nyc-0c9477e4fde1.herokuapp.com"
 
     private init() {}
 

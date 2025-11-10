@@ -57,6 +57,17 @@ const EVENT_URLS = [
   'https://mercuryeastpresents.com/war-saw/',
   'https://www.thegramercytheatre.com/',
   // 'https://www.ticketweb.com/venue/night-club-101-new-york-ny/686683', // Disabled - blocked by bot detection
+  // Manhattan venues:
+  'https://citywinery.com/new-york-city/events',
+  'https://publictheater.org/joes-pub/',
+  'https://lpr.com',
+  'https://thecuttingroomnyc.com/calendar/',
+  'http://thestonenyc.com/calendar.php',
+  'https://mercuryeastpresents.com/mercurylounge/',
+  'https://www.birdlandjazz.com/calendar/',
+  'https://www.thedelancey.com/events',
+  'https://berlin.nyc',
+  'https://www.arlenesgrocerynyc.com/upcoming-events',
 ];
 
 const CACHE_KEY = 'nyc_events';
