@@ -87,6 +87,10 @@ const EVENT_URLS = [
   'https://www.unionhallny.com/calendar',
   'https://publicrecords.nyc',
   'https://www.kingstheatre.com/events/',
+  // Playhouses & Performance Spaces:
+  'https://www.symphonyspace.org/events',
+  'https://www.bam.org',
+  'https://www.nationalsawdust.org/performances',
 ];
 
 const CACHE_KEY = 'nyc_events';
