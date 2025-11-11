@@ -156,6 +156,13 @@ const EVENT_URLS = [
   'https://www.ubsarena.com/events',
   'https://www.flushingtownhall.org/events',
   'https://www.socratessculpturepark.org/event',
+  // College/University Events & Talks:
+  'https://events.nyu.edu/',
+  'https://nyuskirball.org/events/',
+  'https://events.columbia.edu/',
+  'https://events.cuny.edu/',
+  'https://cooper.edu/events-and-exhibitions/events',
+  'https://events.newschool.edu/',
 ];
 
 const CACHE_KEY = 'nyc_events';
