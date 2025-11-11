@@ -175,6 +175,20 @@ const EVENT_URLS = [
   'https://smokejazz.com/',
   // Music hall:
   'https://www.chelseamusichall.com/',
+  // Bars & nightlife with events:
+  'https://thedeadrabbit.com/event/',
+  'https://arthurstavern.nyc/events/',
+  'https://paddyreillysmusicbar.us/live-music-at-paddy-reillys-music-bar/',
+  'https://www.parksidelounge.nyc/calendar',
+  'https://clubcummingnyc.com',
+  'https://www.whitehorsetavern1880.com/events',
+  'https://bitterend.com/',
+  // Performance venues:
+  'https://www.thetownhall.org/events',
+  'https://www.frauncestavernmuseum.org/events-calendar',
+  // Lower East Side music venues:
+  'https://pianosnyc.com/SHOWS',
+  'https://nublu.net/program',
 ];
 
 const CACHE_KEY = 'nyc_events';
