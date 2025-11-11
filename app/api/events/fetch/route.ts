@@ -132,6 +132,22 @@ const EVENT_URLS = [
   'https://comicstriplive.com',
   'https://broadwaycomedyclub.com/shows',
   'https://www.bargemusic.org/concerts',
+  // Bushwick/Williamsburg indie venues:
+  'https://www.thesultanroom.com/calendar',
+  'https://www.goldsoundsbar.com',
+  'https://www.alphavillebar.com',
+  'https://www.tveyenyc.com/calendar',
+  'https://www.brooklynmade.com/calendar',
+  'https://www.goodroombk.com',
+  'https://www.silobrooklyn.com',
+  // Manhattan dance/electronic:
+  'https://www.marqueeclub.net/calendar',
+  'https://www.standardhotels.com/new-york/features/le-bain',
+  'https://www.nebula.nyc/events',
+  // Queens venues:
+  'https://www.ubsarena.com/events',
+  'https://www.flushingtownhall.org/events',
+  'https://www.socratessculpturepark.org/event',
 ];
 
 const CACHE_KEY = 'nyc_events';
