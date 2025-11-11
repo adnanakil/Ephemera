@@ -163,6 +163,18 @@ const EVENT_URLS = [
   'https://events.cuny.edu/',
   'https://cooper.edu/events-and-exhibitions/events',
   'https://events.newschool.edu/',
+  // Manhattan comedy & performance spaces:
+  'https://www.theboweryelectric.com/calendar/',
+  'https://magnettheater.com/',
+  'https://ucbcomedy.com/',
+  'https://thepit-nyc.com/calendar/',
+  'https://arsnovanyc.com/',
+  // Jazz clubs:
+  'https://www.bluenotejazz.com/nyc/shows/',
+  'https://www.smallslive.com/',
+  'https://smokejazz.com/',
+  // Music hall:
+  'https://www.chelseamusichall.com/',
 ];
 
 const CACHE_KEY = 'nyc_events';
