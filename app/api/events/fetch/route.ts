@@ -197,6 +197,13 @@ const EVENT_URLS = [
   // Nightclubs & dance venues:
   'https://nowadays.nyc/',
   'https://taogroup.com/venues/marquee-new-york/events/',
+  // Greenwich Village jazz & blues:
+  'https://www.zincbar.com/calendar/',
+  'https://www.terrablues.com/calendar',
+  // Unique performance spaces:
+  'https://sidgolds.com/new-york/new-york-events/',
+  'https://www.slipperroom.com/calendar',
+  'https://www.pangeanyc.com/',
 ];
 
 const CACHE_KEY = 'nyc_events';
