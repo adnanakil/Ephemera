@@ -148,6 +148,7 @@ const EVENT_URLS = [
   'https://www.brooklynmade.com/calendar',
   'https://www.goodroombk.com',
   'https://www.silobrooklyn.com',
+  'https://www.gutterbarbowl.com/williamsburg',
   // Manhattan dance/electronic:
   'https://www.marqueeclub.net/calendar',
   'https://www.standardhotels.com/new-york/features/le-bain',
@@ -169,10 +170,14 @@ const EVENT_URLS = [
   'https://ucbcomedy.com/',
   'https://thepit-nyc.com/calendar/',
   'https://arsnovanyc.com/',
+  'https://caveat.nyc/events',
   // Jazz clubs:
   'https://www.bluenotejazz.com/nyc/shows/',
   'https://www.smallslive.com/',
+  'https://www.smallslive.com/mezzrow/',
   'https://smokejazz.com/',
+  'https://www.thedjangonyc.com/events/',
+  'https://www.theiridium.com/events',
   // Music hall:
   'https://www.chelseamusichall.com/',
   // Bars & nightlife with events:
