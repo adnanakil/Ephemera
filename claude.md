@@ -118,7 +118,7 @@ node tools/scrape-venue.js https://theater.org "performance|schedule"
 
 ### Current Event Sources
 
-**Total: 111 venues across NYC**
+**Total: 117 venues across NYC**
 
 Categories:
 - Brooklyn music venues (35+) - including Bushwick/Williamsburg indie & DIY spaces
@@ -128,6 +128,7 @@ Categories:
 - Art museums & cultural institutions (12) - MoMA, Met, Guggenheim, Whitney, Brooklyn Museum, Frick, Morgan Library, New Museum, Studio Museum in Harlem, AMNH, NY Historical Society, Museum of the City of NY
 - Comedy clubs (5)
 - Performance halls (Lincoln Center, Carnegie Hall, Apollo Theater, Radio City, MSG)
+- College/University events (6) - NYU, Columbia, CUNY, Cooper Union, New School
 
 ## Key Files
 
