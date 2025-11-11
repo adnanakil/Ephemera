@@ -118,16 +118,16 @@ node tools/scrape-venue.js https://theater.org "performance|schedule"
 
 ### Current Event Sources
 
-**Total: 76 venues across NYC**
+**Total: 103 venues across NYC**
 
 Categories:
-- Brooklyn music venues (20+)
-- Manhattan clubs & theaters (40+)
-- Queens venues (3)
+- Brooklyn music venues (35+) - including Bushwick/Williamsburg indie & DIY spaces
+- Manhattan clubs & theaters (50+) - including electronic/dance venues
+- Queens venues (6) - including Forest Hills Stadium, UBS Arena
 - Jazz clubs (5)
 - Art museums (4)
-- Comedy clubs (3)
-- Performance halls (Lincoln Center, Carnegie Hall, Apollo Theater)
+- Comedy clubs (5)
+- Performance halls (Lincoln Center, Carnegie Hall, Apollo Theater, Radio City, MSG)
 
 ## Key Files
 
