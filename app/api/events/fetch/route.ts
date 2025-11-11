@@ -214,10 +214,14 @@ const EVENT_URLS = [
   // Greenwich Village jazz & blues:
   'https://www.zincbar.com/calendar/',
   'https://www.terrablues.com/calendar',
+  'https://thevillageunderground.com',
   // Unique performance spaces:
   'https://sidgolds.com/new-york/new-york-events/',
   'https://www.slipperroom.com/calendar',
   'https://www.pangeanyc.com/',
+  'https://mercuryeastpresents.com/boweryballroom/',
+  // Harlem venues:
+  'https://shrinenyc.com/',
 ];
 
 const CACHE_KEY = 'nyc_events';
