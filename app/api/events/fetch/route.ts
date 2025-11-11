@@ -69,6 +69,8 @@ const EVENT_URLS = [
   'https://berlin.nyc',
   'https://www.arlenesgrocerynyc.com/upcoming-events',
   'https://www.ottosshrunkenhead.com/pages/events.php',
+  'https://dromnyc.com/events/',
+  'https://www.cafewha.com/calendar',
   // Brooklyn small venues:
   'https://www.petescandystore.com/calendar/',
   'https://tveyenyc.com/calendar/',
@@ -153,6 +155,7 @@ const EVENT_URLS = [
   'https://skinnydennisbrooklyn.com',
   'https://www.fnlbk.com/upcoming',
   'https://hankssaloon.com/calendar/',
+  'https://www.cmoneverybody.com/events',
   // Manhattan dance/electronic:
   'https://www.marqueeclub.net/calendar',
   'https://www.standardhotels.com/new-york/features/le-bain',
@@ -162,6 +165,7 @@ const EVENT_URLS = [
   'https://www.flushingtownhall.org/events',
   'https://www.socratessculpturepark.org/event',
   'https://www.thetranspecos.com/',
+  'https://www.footlightunderground.com/',
   // College/University Events & Talks:
   'https://events.nyu.edu/',
   'https://nyuskirball.org/events/',
