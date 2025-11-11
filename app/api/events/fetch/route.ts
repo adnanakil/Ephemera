@@ -117,6 +117,21 @@ const EVENT_URLS = [
   'https://www.metmuseum.org/events',
   'https://www.brooklynmuseum.org/calendar',
   'https://www.guggenheim.org/event',
+  // Additional venues (2025-01):
+  'https://www.knockdown.center',
+  'https://www.thestandnyc.com/shows',
+  'https://www.rockwoodmusichall.com',
+  'https://www.pioneerworks.org/events',
+  'https://www.saintannswarehouse.org',
+  'https://www.avant-gardner.com/events',
+  'https://www.brooklynparamount.com',
+  'https://www.msg.com/calendar',
+  'https://www.radiocity.com/events',
+  'https://www.foresthillsstadium.com',
+  'https://www.sonyhall.com/events',
+  'https://comicstriplive.com',
+  'https://broadwaycomedyclub.com/shows',
+  'https://www.bargemusic.org/concerts',
 ];
 
 const CACHE_KEY = 'nyc_events';
