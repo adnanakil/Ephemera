@@ -189,6 +189,14 @@ const EVENT_URLS = [
   // Lower East Side music venues:
   'https://pianosnyc.com/SHOWS',
   'https://nublu.net/program',
+  // Cabaret & supper clubs:
+  'https://www.theduplex.com/upcoming',
+  'https://shows.donttellmamanyc.com/',
+  'https://54below.org/calendar/',
+  'https://jazz.org/dizzys/',
+  // Nightclubs & dance venues:
+  'https://nowadays.nyc/',
+  'https://taogroup.com/venues/marquee-new-york/events/',
 ];
 
 const CACHE_KEY = 'nyc_events';
