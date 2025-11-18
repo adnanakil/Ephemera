@@ -1166,6 +1166,9 @@ ${scrapedContent.substring(0, 200000)}`,
     });
     console.log('[API] Scraping complete');
 
+    // Save completion timestamp for scheduled scraping
+    await redis.set('scraping:lastCompleted', Date.now().toString());
+
     // Trigger automatic geocoding in background (don't wait for it)
     console.log('[API] Triggering automatic geocoding...');
     fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://ephemera-nyc-0c9477e4fde1.herokuapp.com'}/api/events/geocode`, {
