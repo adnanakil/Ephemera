@@ -77,6 +77,7 @@ const EVENT_URLS = [
   'https://tveyenyc.com/calendar/',
   'https://www.thetinycupboard.com/calendar',
   'https://www.eastvillecomedy.com/calendar',
+  'https://www.brooklyncc.com/whats-playing-shows',
   // Manhattan comedy clubs:
   'https://newyorkcomedyclub.com/calendar',
   'https://www.gothamcomedyclub.com/calendar',
