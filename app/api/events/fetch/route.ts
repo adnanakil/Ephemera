@@ -71,6 +71,7 @@ const EVENT_URLS = [
   'https://www.ottosshrunkenhead.com/pages/events.php',
   'https://dromnyc.com/events/',
   'https://www.cafewha.com/calendar',
+  'https://www.bathtubginnyc.com/entertainment-nyc/',
   // Brooklyn small venues:
   'https://www.petescandystore.com/calendar/',
   'https://tveyenyc.com/calendar/',
