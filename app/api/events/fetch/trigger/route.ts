@@ -380,5 +380,4 @@ ${scrapedContent.substring(0, 200000)}`,
 }
 
 // Wrap with QStash signature verification
-// export const POST = verifySignatureAppRouter(handler);
-export { handler as POST };
+export const POST = verifySignatureAppRouter(handler);
