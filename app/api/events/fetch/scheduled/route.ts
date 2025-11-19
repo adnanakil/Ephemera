@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
     console.log(`[Scheduled] Time since last scrape: ${Math.round(timeSinceLastScrape / 1000 / 60 / 60)} hours`);
 
     // Only run if 2+ days have passed
+    /*
     if (timeSinceLastScrape < TWO_DAYS_MS) {
       const hoursRemaining = Math.round((TWO_DAYS_MS - timeSinceLastScrape) / 1000 / 60 / 60);
       console.log(`[Scheduled] Skipping scrape - ${hoursRemaining} hours until next scheduled run`);
@@ -30,6 +31,7 @@ export async function POST(request: NextRequest) {
         hoursUntilNext: hoursRemaining
       });
     }
+    */
 
     // Trigger the scrape by calling the fetch endpoint
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ephemera-nyc-0c9477e4fde1.herokuapp.com';
