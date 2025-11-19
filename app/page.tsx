@@ -60,68 +60,104 @@ export default function Home() {
     loadCachedEvents();
   }, []);
 
-  // Helper function to parse date from time string
-  const parseEventDate = (timeString: string): Date | null => {
-    if (!timeString) return null;
+  // Helper function to get the current date in New York
+  const getNowInNewYork = () => {
+    return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  };
 
+  // Helper function to parse date and time from time string
+  const parseEventDateTime = (timeString: string): Date | null => {
+    if (!timeString) return null;
+  
     const months: Record<string, number> = {
       'january': 0, 'february': 1, 'march': 2, 'april': 3, 'may': 4, 'june': 5,
       'july': 6, 'august': 7, 'september': 8, 'october': 9, 'november': 10, 'december': 11,
       'jan': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'jun': 5, 'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'dec': 11
     };
-
+  
     const lowerTime = timeString.toLowerCase();
     let month: number | null = null;
     let day: number | null = null;
-
-    // Find month
+    let hour = 12; // Default to noon if no time is found
+    let minute = 0;
+  
     for (const [monthName, monthNum] of Object.entries(months)) {
       if (lowerTime.includes(monthName)) {
         month = monthNum;
-        // Try to find day number after month
         const afterMonth = timeString.substring(lowerTime.indexOf(monthName) + monthName.length);
-        const dayMatch = afterMonth.match(/\d+/);
+        
+        // Regex to find a single day or a date range (e.g., "7", "7-9", "7 - 9")
+        const dayMatch = afterMonth.match(/(\d+)(?:\s*-\s*(\d+))?/);
         if (dayMatch) {
-          day = parseInt(dayMatch[0]);
+          // If a range is found (e.g., "7-9"), use the end date ("9"). Otherwise, use the single day ("7").
+          const endDay = dayMatch[2] || dayMatch[1];
+          day = parseInt(endDay);
         }
         break;
       }
     }
-
-    if (month !== null && day !== null) {
-      // Use current year, or next year if the month has passed
-      const now = new Date();
-      let year = now.getFullYear();
-      const eventDate = new Date(year, month, day);
-
-      // If event date is more than 30 days in the past, assume it's next year
-      if (eventDate < now && (now.getTime() - eventDate.getTime()) > 30 * 24 * 60 * 60 * 1000) {
-        year += 1;
-      }
-
-      return new Date(year, month, day);
+  
+    const timeMatch = lowerTime.match(/(\d{1,2})(:(\d{2}))?\s*(am|pm)?/);
+    if (timeMatch) {
+      hour = parseInt(timeMatch[1]);
+      minute = timeMatch[3] ? parseInt(timeMatch[3]) : 0;
+      const isPm = timeMatch[4] === 'pm';
+  
+      if (isPm && hour < 12) hour += 12;
+      else if (!isPm && hour === 12) hour = 0;
     }
+  
+    if (month !== null && day !== null) {
+      const now = getNowInNewYork();
+      let year = now.getFullYear();
+      
+      const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
+      let eventDate = new Date(dateString);
 
+      if (eventDate < now && (now.getTime() - eventDate.getTime()) > 24 * 60 * 60 * 1000) {
+        year += 1;
+        const nextYearDateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
+        eventDate = new Date(nextYearDateString);
+      }
+  
+      return eventDate;
+    }
+  
     return null;
   };
 
   // Filter events based on borough and neighborhood
   const filteredEvents = events
     .filter((event) => {
+      // First, filter by borough and neighborhood
       const boroughMatch = selectedBorough === 'All' || event.borough === selectedBorough;
       const neighborhoodMatch =
         neighborhoodSearch === '' ||
         event.neighborhood?.toLowerCase().includes(neighborhoodSearch.toLowerCase()) ||
         event.location?.toLowerCase().includes(neighborhoodSearch.toLowerCase());
 
-      return boroughMatch && neighborhoodMatch;
+      if (!boroughMatch || !neighborhoodMatch) {
+        return false;
+      }
+
+      // Then, filter by date
+      const eventEndDate = parseEventDateTime(event.time);
+      const nowInNY = getNowInNewYork();
+      nowInNY.setHours(0, 0, 0, 0); // Set to the beginning of the day for comparison
+
+      if (eventEndDate) {
+        // If we have a date, it must be on or after today
+        return eventEndDate >= nowInNY;
+      } else {
+        // If we can't parse a date, show the event only if its time string includes "ongoing"
+        // This handles events that are long-running without specific end dates in the title
+        return event.time?.toLowerCase().includes('ongoing') ?? false;
+      }
     })
     .sort((a, b) => {
-      // Sort by date, soonest first
-      const dateA = parseEventDate(a.time);
-      const dateB = parseEventDate(b.time);
+      const dateA = parseEventDateTime(a.time);
+      const dateB = parseEventDateTime(b.time);
 
-      // Events with no date go to the end
       if (!dateA && !dateB) return 0;
       if (!dateA) return 1;
       if (!dateB) return -1;
