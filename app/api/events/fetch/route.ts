@@ -16,6 +16,7 @@ interface Event {
   lng?: number;
   link?: string;
   ticketLink?: string;
+  enriched?: boolean;
 }
 
 interface EventsResponse {
@@ -224,6 +225,134 @@ const EVENT_URLS = [
   'https://mercuryeastpresents.com/boweryballroom/',
   // Harlem venues:
   'https://shrinenyc.com/',
+  // Google Places API discovered Manhattan venues:
+  'https://rooftopatpier17.com/concerts/', // Pier 17
+  'https://gibneydance.org/calendar/', // Gibney Dance
+  'https://www.sourmousenyc.com/events', // Sour Mouse
+  'https://www.comedycellar.com/', // Comedy Cellar
+  'https://metrograph.com/events/', // Metrograph
+  'https://www.loreleynyc.com/events', // Loreley Beer Garden
+  'https://www.tenement.org/events/', // Tenement Museum
+  'https://elizabethstreetgarden.com/calendar', // Elizabeth Street Garden
+  'https://www.icp.org/events', // Intl Center of Photography
+  'https://mjhnyc.org/events/', // Museum of Jewish Heritage
+  'https://www.eldridgestreet.org/events', // Museum at Eldridge Street
+  'https://hudsonriverpark.org/visit/events/', // Hudson River Park
+  'https://www.museumofsex.com/events/', // Museum of Sex
+  'https://www.themuseumofbroadway.com/calendar', // Museum of Broadway
+  'https://momath.org/calendar/', // National Museum of Mathematics
+  'https://www.fitnyc.edu/museum/events/', // Museum at FIT
+  'https://japansociety.org/events', // Japan Society
+  'https://madmuseum.org/calendar', // Museum of Arts and Design
+  'https://www.artechouse.com/upcoming/', // ARTECHOUSE NYC
+  'https://www.grandcentralterminal.com/events-page/', // Grand Central Terminal
+  'https://javitscenter.com/calendar/', // Javits Center
+  'https://www.rockefellercenter.com/events/', // Rockefeller Center
+  'https://intrepidmuseum.org/events/calendar', // Intrepid Museum
+  'https://www.davidhkochtheater.com/tickets-and-events/calendar', // David H. Koch Theater
+  'https://www.ailey.org/calendar', // Alvin Ailey
+  'https://www.nyphil.org/concerts-tickets/', // NY Philharmonic / David Geffen Hall
+  'https://www.lct.org/shows/', // Lincoln Center Theater
+  'https://www.roundabouttheatre.org/get-tickets/find-tickets', // Studio 54 / Roundabout Theatre
+  'https://www.cooperhewitt.org/events', // Cooper Hewitt
+  'https://asiasociety.org/new-york/events', // Asia Society
+  'https://elmuseo.org/calendar/', // El Museo del Barrio
+  'https://hispanicsociety.org/whats-on/events-calendar/', // Hispanic Society
+  'https://www.millertheatre.com/events', // Miller Theatre
+  'https://native125th.com/upcoming-events/', // Native Harlem
+  'https://hsanyc.org/calendar/', // Harlem School of the Arts
+  'https://citycollegecenterforthearts.org/gca/events', // Aaron Davis Hall
+  'https://www.harlemstage.org/events', // Harlem Stage Gatehouse
+  'https://italianacademy.columbia.edu/events', // Italian Academy, Columbia
+  'https://www.comedyinharlem.com/events', // Comedy In Harlem
+  'https://jmih.org/event/', // National Jazz Museum in Harlem
+  'https://www.lenfest.arts.columbia.edu/calendar', // Lenfest Center for the Arts
+  'https://www.dwyerculturalcenter.org/upcoming-events-gww8x', // Dwyer Cultural Center
+  'https://theshabazzcenter.org/events/', // Malcolm X & Betty Shabazz Center
+  'https://morrisjumel.org/programs-events/', // Morris-Jumel Mansion
+  'https://www.artsandletters.org/events', // American Academy of Arts & Letters
+  'https://www.wordupbooks.com/events/calendar', // Word Up Community Bookshop
+  'https://jazzfoundation.org/events', // Jazz Foundation of America
+  'https://www.abronsartscenter.org/calendar', // Abrons Arts Center
+  'https://theseaport.nyc/events/', // The Seaport
+  'https://randallsisland.org/events', // Randalls Island
+  'https://www.kenteroyalgallery.com/events-1', // Kente Royal Gallery
+  'https://www.macyartgallery.com/calendar', // Macy Art Gallery
+  'https://ihouse-nyc.org/events', // International House
+  'https://eagle-ny.com/calendarofevents/', // Eagle NYC
+  'https://www.thedl-nyc.com/events', // The DL
+  'https://www.mrpurplenyc.com/upcoming-events/', // Mr. Purple
+  'https://slate-ny.com/events/', // Slate NYC
+  'https://moxytimessquare.com/calendar/', // Magic Hour Rooftop
+  'https://www.lagosnyc.com/upcoming-events/', // Lagos TSQ
+  'https://ascentloungenyc.com/events/', // Ascent Lounge
+  'https://www.neuegalerie.org/tickets', // Neue Galerie
+  'https://victorscafe.com/music-and-live-performances-at-victors-cafe/', // Victor's Cafe
+  'https://www.eataly.com/us_en/classes-and-events', // Eataly NYC
+  'https://cornersocialnyc.com/dj-lineup/', // Corner Social
+  'https://sofritony.com/events/', // Sofrito
+  'https://230-fifth.com/events/', // 230 Fifth Rooftop
+  'https://www.oldmates.com/upcoming-events/', // Old Mates Pub
+  // Google Places API discovered Brooklyn venues:
+  'https://www.union-pool.com/calendar', // Union Pool
+  'https://www.cafeerzulie.com/events', // Cafe Erzulie
+  'https://www.sleepwalk.nyc/events', // Sleepwalk
+  'http://www.bkarthaus.com/calendar', // Brooklyn Art Haus
+  'https://brooklynmusickitchen.com/calendar/', // Brooklyn Music Kitchen
+  'https://www.si-bk.com/shows', // Superior Ingredients
+  'https://www.deadletterno9.com/events', // Dead Letter No. 9
+  'https://www.secondcity.com/shows/new-york', // The Second City New York
+  'https://www.signalnyc.club/club-calendar', // Signal
+  'http://www.brooklyncomedy.com/show-schedule', // Brooklyn Comedy Collective (BCC)
+  'http://www.cprnyc.org/event-calendar', // CPR - Center for Performance Research
+  'https://cityreliquary.org/category/events/', // The City Reliquary Museum
+  'http://www.ampmgallery.com/events', // AM:PM Gallery
+  'https://www.pratt.edu/events', // Pratt Institute
+  'https://www.thebrooklynmonarch.com/shows', // The Brooklyn Monarch
+  'https://www.barbesbrooklyn.com/events', // Barbes
+  'https://roulette.org/calendar/', // Roulette Intermedium
+  'https://tfana.org/performance-calendar', // Theatre for a New Audience
+  'https://www.wildeastbrewing.com/events', // Wild East Brewing Co.
+  'https://www.theratnyc.com/event-list', // The Rat NYC
+  'https://theowl.nyc/calendar/', // The Owl Music Parlor
+  'https://www.bax.org/events/', // Brooklyn Arts Exchange (BAX)
+  'https://shapeshifterlab.com/showcase/', // ShapeShifter Lab
+  'http://www.art-newyork.org/calendar', // Alliance of Resident Theatres
+  'https://thebillieholidaytheatre.org/events/', // The Billie Holiday Theatre
+  'https://denofsplendor.com/events/', // Den of Splendor
+  'https://theoldstonehouse.org/events/', // Old Stone House of Brooklyn
+  'http://www.urbanglass.org/events', // UrbanGlass
+  'http://blankforms.org/events-and-exhibitions', // Blank Forms
+  'http://www.fivemyles.org/calendar', // Five Myles Gallery
+  'https://bbg.org/visit/calendar', // Brooklyn Botanic Garden
+  'https://www.prospectpark.org/events/', // Prospect Park
+  'https://shop.threesbrewing.com/pages/events-list', // Threes Brewing
+  'https://www.franklinparkbk.com/events/', // Franklin Park
+  'https://bricartsmedia.org/events/calendar/', // BRIC / Lena Horne Bandshell
+  'http://ornithologyjazzclub.com/brooklyn-bushwick-williamsburg-ornithology-jazz-club-events', // Ornithology Jazz Club
+  'https://theredpavilion.com/calendar', // The Red Pavilion
+  'https://www.thebroadway.nyc/shows', // The Broadway
+  'https://companyxiv.com/about/shows/', // Theatre XIV by Company XIV
+  'http://www.lot45bushwick.com/lot45-events', // Lot45
+  'http://www.jupiterdisco.com/events', // Jupiter Disco
+  'https://www.weeksvillesociety.org/events/', // Weeksville Heritage Center
+  'http://selva.nyc/events', // Selva
+  'http://www.the-living-gallery.com/Future-Events---Exhibitions.html', // The Living Gallery
+  'https://www.timeoutmarket.com/time-out-market-new-york/events-groups', // Time Out Market New York
+  'https://dekalbmarkethall.com/events', // Dekalb Market Hall
+  'https://smorgasburg.com/new-events', // Smorgasburg
+  'https://radegasthall.com/events-2/', // Radegast Hall & Biergarten
+  'http://www.geminiandscorpio.com/events.html', // Gemini and Scorpio Loft
+  'https://www.superfine.nyc/events/', // Superfine
+  'http://333lounge.com/weekly-events/', // 333 Lounge
+  'https://brooklynstorehouse.com/whats-on/', // Brooklyn Storehouse
+  'https://www.mofad.org/buy-tickets', // Museum of Food and Drink (MOFAD)
+  'https://lesbianherstoryarchives.org/calendar/', // Lesbian Herstory Archives
+  'http://www.airgallery.org/events', // A.I.R. Gallery
+  'https://essencebar.com/event-page', // Essence Bar and Grill
+  'https://www.headhi.net/events-2026', // Head Hi
+  'https://www.drinkbk.com/events', // Drink Lounge & Cafe
+  'http://www.440gallery.com/events', // 440 Gallery
 ];
 
 const CACHE_KEY = 'nyc_events';
@@ -313,9 +442,9 @@ function isEventPast(event: Event): boolean {
 
   const timeString = event.time.toLowerCase();
 
-  // Always keep "ongoing" events
+  // Filter out "ongoing" events - they lack specific dates
   if (timeString.includes('ongoing') || timeString.includes('permanent')) {
-    return false;
+    return true;
   }
 
   // Try to parse the date from the time string
@@ -538,6 +667,7 @@ CRITICAL REQUIREMENTS FOR DATES:
 6. Look for date indicators in headings, sections, calendars, or near the event to find the actual date
 7. If you can only find the time (like "7:30 PM") but the date is in a section heading above it, combine them!
 8. It's better to skip an event than to use a day-of-week name without the actual date
+9. SKIP events that are "ongoing", "permanent", or have no specific date - we only want events with concrete dates
 
 OTHER REQUIREMENTS:
 1. Extract EVERY SINGLE event on the page - DO NOT stop after a few events
@@ -900,11 +1030,12 @@ export async function POST(request: NextRequest) {
         console.error('[API] Error updating status:', statusError);
       }
 
-      try {
-        let scrapedContent = '';
-        let scraper = '';
+      // Special handling for eventlume.com to perform a deep scrape
+      if (url.includes('eventlume.com')) {
+        console.log(`[API] Performing deep scrape for ${url}`);
+        let eventDetailUrls: string[] = [];
 
-        // Try Firecrawl first
+        // 1. Scrape the main page to get all event links
         try {
           const firecrawlResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
             method: 'POST',
@@ -912,81 +1043,232 @@ export async function POST(request: NextRequest) {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${firecrawlApiKey}`,
             },
-            body: JSON.stringify({
-              url: url,
-              formats: ['markdown', 'html'],
-              waitFor: 3000,
-              timeout: 30000,
-            }),
+            body: JSON.stringify({ url: url, pageOptions: { onlyMainContent: true } }),
           });
 
           if (firecrawlResponse.ok) {
             const firecrawlData = await firecrawlResponse.json();
-            scrapedContent = firecrawlData.data?.markdown || firecrawlData.data?.html || '';
-            if (scrapedContent) {
-              scraper = 'Firecrawl';
-              console.log(`[API] Firecrawl success for ${url}`);
-            }
+            const links: string[] = firecrawlData.data?.metadata?.links || [];
+            eventDetailUrls = links
+              .filter(link => link.startsWith('https://eventlume.com/events/new-york/'))
+              .filter((link, index, self) => self.indexOf(link) === index); // Deduplicate
+            console.log(`[API] Found ${eventDetailUrls.length} unique event detail links on ${url}`);
           } else {
-            console.log(`[API] Firecrawl failed for ${url}, status: ${firecrawlResponse.status}`);
+            const errorMsg = `Failed to get links from ${url}, status: ${firecrawlResponse.status}`;
+            console.error(`[API] ${errorMsg}`);
+            errors.push(errorMsg);
+            continue; // Skip to the next source in EVENT_URLS
           }
-        } catch (firecrawlError) {
-          console.log(`[API] Firecrawl error for ${url}:`, firecrawlError);
-        }
-
-        // If Firecrawl failed or returned no content, try Scrapfly
-        if (!scrapedContent) {
-          console.log(`[API] Trying Scrapfly for ${url}`);
-          try {
-            const scrapflyUrl = new URL('https://api.scrapfly.io/scrape');
-            scrapflyUrl.searchParams.append('key', scrapflyApiKey);
-            scrapflyUrl.searchParams.append('url', url);
-            scrapflyUrl.searchParams.append('render_js', 'true');
-            scrapflyUrl.searchParams.append('format', 'markdown');
-            scrapflyUrl.searchParams.append('asp', 'true');
-
-            const scrapflyResponse = await fetch(scrapflyUrl.toString());
-
-            if (scrapflyResponse.ok) {
-              const scrapflyData = await scrapflyResponse.json();
-              scrapedContent = scrapflyData.result?.content || '';
-              if (scrapedContent) {
-                scraper = 'Scrapfly';
-                console.log(`[API] Scrapfly success for ${url}`);
-              }
-            } else {
-              console.log(`[API] Scrapfly failed for ${url}, status: ${scrapflyResponse.status}`);
-            }
-          } catch (scrapflyError) {
-            console.log(`[API] Scrapfly error for ${url}:`, scrapflyError);
-          }
-        }
-
-        // If both scrapers failed, skip this URL
-        if (!scrapedContent) {
-          const errorMsg = `Scrapers failed for ${url.substring(0, 50)}...`;
+        } catch (linkError) {
+          const errorMsg = `Error scraping links from ${url}: ${linkError instanceof Error ? linkError.message : String(linkError)}`;
           console.error(`[API] ${errorMsg}`);
           errors.push(errorMsg);
-          continue;
+          continue; // Skip to the next source
         }
 
-        console.log(`[API] Content length from ${url} (via ${scraper}): ${scrapedContent.length} characters`);
+        // 2. Scrape each event detail page
+        for (const detailUrl of eventDetailUrls) {
+          try {
+            console.log(`[API] Deep scraping event detail page: ${detailUrl}`);
+            const detailResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${firecrawlApiKey}`,
+              },
+              body: JSON.stringify({
+                url: detailUrl,
+                formats: ['markdown'],
+                waitFor: 3000,
+                timeout: 30000,
+              }),
+            });
 
-        // Use Claude to extract structured event data
-        const anthropic = new Anthropic({
-          apiKey: anthropicApiKey,
-        });
+            if (!detailResponse.ok) {
+              console.log(`[API] Firecrawl failed for detail page ${detailUrl}, status: ${detailResponse.status}`);
+              continue; // Skip to next detail URL
+            }
 
-        let response;
+            const detailData = await detailResponse.json();
+            const scrapedContent = detailData.data?.markdown;
+
+            if (!scrapedContent) {
+              console.log(`[API] No content found for detail page ${detailUrl}`);
+              continue;
+            }
+
+            // The rest of the process (AI extraction, location parsing) is the same
+            // Use Claude to extract structured event data
+            const anthropic = new Anthropic({ apiKey: anthropicApiKey });
+            const claudeResponse = await anthropic.messages.create({
+              model: 'claude-haiku-4-5',
+              max_tokens: 4096, // Can be smaller for single event pages
+              messages: [
+                {
+                  role: 'user',
+                  content: `You are an event extraction system. Extract the event from this page.
+
+For the event, provide:
+- title: The event name
+- description: Brief description (2-3 sentences max)
+- time: FULL date and time (MUST include MONTH and DAY NUMBER like "November 9", plus time like "7:00 PM". NEVER use day-of-week names like "Saturday" alone!)
+- location: Where it takes place (be specific, include venue name)
+- category: Choose ONE category that best fits the event from these options: "Cultural & Arts", "Fitness & Wellness", "Sports & Recreation", "Markets & Shopping", "Community & Volunteering", "Food & Dining", "Holiday & Seasonal", "Professional & Networking", "Educational & Literary"
+- link: Use this exact URL: ${detailUrl}
+- ticketLink: URL to buy tickets (if available)
+
+CRITICAL REQUIREMENTS:
+1. Extract MONTH + DAY format: "November 9", "December 15"
+2. NEVER use relative dates like "Today", "Tomorrow"
+3. Combine date and time info if they are separate on the page.
+4. SKIP events that are "ongoing", "permanent", or have no specific date - we only want events with concrete dates
+
+Return ONLY a valid JSON object for this single event, nothing else. NO explanatory text, NO comments.
+Format:
+{"title":"...","description":"...","time":"...","location":"...","category":"...","link":"...","ticketLink":"..."}
+
+Content to parse:
+${scrapedContent.substring(0, 100000)}`,
+                },
+              ],
+            });
+
+            let eventText = '';
+            for (const block of claudeResponse.content) {
+              if (block.type === 'text') {
+                eventText += block.text;
+              }
+            }
+            
+            const jsonMatch = eventText.match(/\{[\s\S]*\}/);
+            if (!jsonMatch) {
+              console.error(`[API] No JSON object found in response for ${detailUrl}`);
+              continue;
+            }
+
+            let event: Event;
+            try {
+              event = JSON.parse(jsonMatch[0]);
+            } catch (jsonParseError) {
+              console.error(`[API] Failed to parse JSON for ${detailUrl}:`, jsonParseError);
+              continue;
+            }
+            
+            // This will return an object for a single event, wrap it in an array
+            const eventsWithLocation = await Promise.all(
+              [event].map(async (e: Event) => {
+                const { borough, neighborhood, lat, lng } = await parseLocation(e.location || '', false);
+                const inferredTime = inferDateFromDayOfWeek(e.time || '');
+                return { ...e, time: inferredTime, borough, neighborhood, lat, lng };
+              })
+            );
+
+            totalNewEvents += eventsWithLocation.length;
+
+            // INCREMENTAL SAVE
+            existingEvents = mergeEvents(existingEvents, eventsWithLocation);
+            const activeEvents = existingEvents.filter(ev => !isEventPast(ev));
+            await redis.set(CACHE_KEY, {
+              success: true,
+              count: activeEvents.length,
+              events: activeEvents,
+              lastFetched: new Date().toISOString(),
+            });
+            console.log(`[API] Incremental save: ${activeEvents.length} total events cached (${eventsWithLocation.length} new from ${detailUrl})`);
+          
+          } catch (detailError) {
+             console.error(`[API] Error processing detail URL ${detailUrl}:`, detailError);
+          }
+        }
+      } else {
+        // This is the original logic for all other non-eventlume URLs
         try {
-          console.log(`[API] Calling Claude API for ${url}...`);
-          response = await anthropic.messages.create({
-          model: 'claude-haiku-4-5',
-          max_tokens: 8192,
-          messages: [
-            {
-              role: 'user',
-              content: `You are an event extraction system. Extract EVERY SINGLE event from this NYC events page.
+          let scrapedContent = '';
+          let scraper = '';
+
+          // Try Firecrawl first
+          try {
+            const firecrawlResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${firecrawlApiKey}`,
+              },
+              body: JSON.stringify({
+                url: url,
+                formats: ['markdown', 'html'],
+                waitFor: 3000,
+                timeout: 30000,
+              }),
+            });
+
+            if (firecrawlResponse.ok) {
+              const firecrawlData = await firecrawlResponse.json();
+              scrapedContent = firecrawlData.data?.markdown || firecrawlData.data?.html || '';
+              if (scrapedContent) {
+                scraper = 'Firecrawl';
+                console.log(`[API] Firecrawl success for ${url}`);
+              }
+            } else {
+              console.log(`[API] Firecrawl failed for ${url}, status: ${firecrawlResponse.status}`);
+            }
+          } catch (firecrawlError) {
+            console.log(`[API] Firecrawl error for ${url}:`, firecrawlError);
+          }
+
+          // If Firecrawl failed or returned no content, try Scrapfly
+          if (!scrapedContent) {
+            console.log(`[API] Trying Scrapfly for ${url}`);
+            try {
+              const scrapflyUrl = new URL('https://api.scrapfly.io/scrape');
+              scrapflyUrl.searchParams.append('key', scrapflyApiKey);
+              scrapflyUrl.searchParams.append('url', url);
+              scrapflyUrl.searchParams.append('render_js', 'true');
+              scrapflyUrl.searchParams.append('format', 'markdown');
+              scrapflyUrl.searchParams.append('asp', 'true');
+
+              const scrapflyResponse = await fetch(scrapflyUrl.toString());
+
+              if (scrapflyResponse.ok) {
+                const scrapflyData = await scrapflyResponse.json();
+                scrapedContent = scrapflyData.result?.content || '';
+                if (scrapedContent) {
+                  scraper = 'Scrapfly';
+                  console.log(`[API] Scrapfly success for ${url}`);
+                }
+              } else {
+                console.log(`[API] Scrapfly failed for ${url}, status: ${scrapflyResponse.status}`);
+              }
+            } catch (scrapflyError) {
+              console.log(`[API] Scrapfly error for ${url}:`, scrapflyError);
+            }
+          }
+
+          // If both scrapers failed, skip this URL
+          if (!scrapedContent) {
+            const errorMsg = `Scrapers failed for ${url.substring(0, 50)}...`;
+            console.error(`[API] ${errorMsg}`);
+            errors.push(errorMsg);
+            continue;
+          }
+
+          console.log(`[API] Content length from ${url} (via ${scraper}): ${scrapedContent.length} characters`);
+
+          // Use Claude to extract structured event data
+          const anthropic = new Anthropic({
+            apiKey: anthropicApiKey,
+          });
+
+          let response;
+          try {
+            console.log(`[API] Calling Claude API for ${url}...`);
+            response = await anthropic.messages.create({
+            model: 'claude-haiku-4-5',
+            max_tokens: 8192,
+            messages: [
+              {
+                role: 'user',
+                content: `You are an event extraction system. Extract EVERY SINGLE event from this NYC events page.
 
 For each event, provide:
 - title: The event name
@@ -1006,6 +1288,7 @@ CRITICAL REQUIREMENTS FOR DATES:
 6. Look for date indicators in headings, sections, calendars, or near the event to find the actual date
 7. If you can only find the time (like "7:30 PM") but the date is in a section heading above it, combine them!
 8. It's better to skip an event than to use a day-of-week name without the actual date
+9. SKIP events that are "ongoing", "permanent", or have no specific date - we only want events with concrete dates
 
 OTHER REQUIREMENTS:
 1. Extract EVERY SINGLE event on the page - DO NOT stop after a few events
@@ -1019,123 +1302,123 @@ Format:
 
 Content to parse:
 ${scrapedContent.substring(0, 200000)}`,
-            },
-          ],
-          });
-          console.log(`[API] Claude API call successful for ${url}`);
-        } catch (claudeError) {
-          const errorMsg = `Claude API failed for ${url.substring(0, 40)}: ${claudeError instanceof Error ? claudeError.message : String(claudeError)}`;
-          console.error(`[API] ${errorMsg}`);
-          console.error(`[API] Full error:`, claudeError);
-          errors.push(errorMsg);
-          continue;
-        }
-
-        let eventsText = '';
-        for (const block of response.content) {
-          if (block.type === 'text') {
-            eventsText += block.text;
+              },
+            ],
+            });
+            console.log(`[API] Claude API call successful for ${url}`);
+          } catch (claudeError) {
+            const errorMsg = `Claude API failed for ${url.substring(0, 40)}: ${claudeError instanceof Error ? claudeError.message : String(claudeError)}`;
+            console.error(`[API] ${errorMsg}`);
+            console.error(`[API] Full error:`, claudeError);
+            errors.push(errorMsg);
+            continue;
           }
-        }
 
-        console.log(`[API] Claude response length for ${url}: ${eventsText.length} characters`);
-
-        // Parse the JSON response from Claude
-        try {
-          // Log first/last 200 chars to debug
-          console.log(`[API] Response preview for ${url}:`);
-          console.log(`[API] First 200 chars: ${eventsText.substring(0, 200)}`);
-          console.log(`[API] Last 200 chars: ${eventsText.substring(Math.max(0, eventsText.length - 200))}`);
-
-          // First try to extract JSON array
-          let jsonMatch = eventsText.match(/\[[\s\S]*\]/);
-
-          // If no array found, try to extract JSON object (might be {"events": [...]})
-          if (!jsonMatch) {
-            console.log(`[API] No array found for ${url}, trying object match...`);
-            const objectMatch = eventsText.match(/\{[\s\S]*\}/);
-            if (objectMatch) {
-              console.log(`[API] Object match found for ${url}, length: ${objectMatch[0].length}`);
-              try {
-                const parsed = JSON.parse(objectMatch[0]);
-                console.log(`[API] Parsed object keys for ${url}: ${Object.keys(parsed).join(', ')}`);
-                // Look for events array in common property names
-                if (parsed.events && Array.isArray(parsed.events)) {
-                  jsonMatch = [JSON.stringify(parsed.events)];
-                  console.log(`[API] Found nested events array for ${url} with ${parsed.events.length} events`);
-                }
-              } catch (parseError) {
-                console.log(`[API] Failed to parse object for ${url}: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
-              }
-            } else {
-              console.log(`[API] No object match found for ${url}`);
+          let eventsText = '';
+          for (const block of response.content) {
+            if (block.type === 'text') {
+              eventsText += block.text;
             }
           }
 
-          if (!jsonMatch) {
-            console.error(`[API] No JSON array found in response for ${url}`);
-            continue;
-          }
+          console.log(`[API] Claude response length for ${url}: ${eventsText.length} characters`);
 
-          let events;
+          // Parse the JSON response from Claude
           try {
-            events = JSON.parse(jsonMatch[0]);
-          } catch (jsonParseError) {
-            console.error(`[API] Failed to parse JSON for ${url}:`, jsonParseError);
-            continue;
-          }
+            // Log first/last 200 chars to debug
+            console.log(`[API] Response preview for ${url}:`);
+            console.log(`[API] First 200 chars: ${eventsText.substring(0, 200)}`);
+            console.log(`[API] Last 200 chars: ${eventsText.substring(Math.max(0, eventsText.length - 200))}`);
 
-          if (!Array.isArray(events) || events.length === 0) {
-            console.log(`[API] No events found in ${url}`);
-            continue;
-          }
+            // First try to extract JSON array
+            let jsonMatch = eventsText.match(/\[[\s\S]*\]/);
 
-          // Parse location to add borough, neighborhood, and coordinates
-          console.log(`[API] Processing locations for ${events.length} events from ${url}...`);
-          const eventsWithLocation = await Promise.all(
-            events.map(async (event: Event) => {
-              const { borough, neighborhood, lat, lng } = await parseLocation(event.location || '', false);
-              // Infer actual dates from day-of-week references
-              const inferredTime = inferDateFromDayOfWeek(event.time || '');
-              return {
-                ...event,
-                time: inferredTime,
-                borough,
-                neighborhood,
-                lat,
-                lng,
-              };
-            })
-          );
+            // If no array found, try to extract JSON object (might be {"events": [...]})
+            if (!jsonMatch) {
+              console.log(`[API] No array found for ${url}, trying object match...`);
+              const objectMatch = eventsText.match(/\{[\s\S]*\}/);
+              if (objectMatch) {
+                console.log(`[API] Object match found for ${url}, length: ${objectMatch[0].length}`);
+                try {
+                  const parsed = JSON.parse(objectMatch[0]);
+                  console.log(`[API] Parsed object keys for ${url}: ${Object.keys(parsed).join(', ')}`);
+                  // Look for events array in common property names
+                  if (parsed.events && Array.isArray(parsed.events)) {
+                    jsonMatch = [JSON.stringify(parsed.events)];
+                    console.log(`[API] Found nested events array for ${url} with ${parsed.events.length} events`);
+                  }
+                } catch (parseError) {
+                  console.log(`[API] Failed to parse object for ${url}: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+                }
+              } else {
+                console.log(`[API] No object match found for ${url}`);
+              }
+            }
 
-          console.log(`[API] Extracted ${eventsWithLocation.length} events from ${url}`);
-          totalNewEvents += eventsWithLocation.length;
+            if (!jsonMatch) {
+              console.error(`[API] No JSON array found in response for ${url}`);
+              continue;
+            }
 
-          // Update status with new events count
-          try {
-            await redis.set(STATUS_KEY, {
-              isRunning: true,
-              currentSource: url,
-              sourcesCompleted: i + 1,
-              totalSources: EVENT_URLS.length,
-              eventsScraped: totalNewEvents,
-              lastUpdate: new Date().toISOString(),
-            });
-          } catch (statusError) {
-            console.error('[API] Error updating status after extraction:', statusError);
-          }
+            let events;
+            try {
+              events = JSON.parse(jsonMatch[0]);
+            } catch (jsonParseError) {
+              console.error(`[API] Failed to parse JSON for ${url}:`, jsonParseError);
+              continue;
+            }
 
-          // INCREMENTAL SAVE: Merge with existing and save to cache immediately
-          existingEvents = mergeEvents(existingEvents, eventsWithLocation);
+            if (!Array.isArray(events) || events.length === 0) {
+              console.log(`[API] No events found in ${url}`);
+              continue;
+            }
 
-          // Filter out past events before saving (keeps today and future events)
-          const activeEvents = existingEvents.filter(event => !isEventPast(event));
+            // Parse location to add borough, neighborhood, and coordinates
+            console.log(`[API] Processing locations for ${events.length} events from ${url}...`);
+            const eventsWithLocation = await Promise.all(
+              events.map(async (event: Event) => {
+                const { borough, neighborhood, lat, lng } = await parseLocation(event.location || '', false);
+                // Infer actual dates from day-of-week references
+                const inferredTime = inferDateFromDayOfWeek(event.time || '');
+                return {
+                  ...event,
+                  time: inferredTime,
+                  borough,
+                  neighborhood,
+                  lat,
+                  lng,
+                };
+              })
+            );
 
-          const responseData = {
-            success: true,
-            count: activeEvents.length,
-            events: activeEvents,
-            lastFetched: new Date().toISOString(),
+            console.log(`[API] Extracted ${eventsWithLocation.length} events from ${url}`);
+            totalNewEvents += eventsWithLocation.length;
+
+            // Update status with new events count
+            try {
+              await redis.set(STATUS_KEY, {
+                isRunning: true,
+                currentSource: url,
+                sourcesCompleted: i + 1,
+                totalSources: EVENT_URLS.length,
+                eventsScraped: totalNewEvents,
+                lastUpdate: new Date().toISOString(),
+              });
+            } catch (statusError) {
+              console.error('[API] Error updating status after extraction:', statusError);
+            }
+
+            // INCREMENTAL SAVE: Merge with existing and save to cache immediately
+            existingEvents = mergeEvents(existingEvents, eventsWithLocation);
+
+            // Filter out past events before saving (keeps today and future events)
+            const activeEvents = existingEvents.filter(event => !isEventPast(event));
+
+            const responseData = {
+              success: true,
+              count: activeEvents.length,
+              events: activeEvents,
+              lastFetched: new Date().toISOString(),
           };
 
           try {
@@ -1151,6 +1434,7 @@ ${scrapedContent.substring(0, 200000)}`,
       } catch (urlError) {
         console.error(`[API] Error processing ${url}:`, urlError);
       }
+      } // close else block (non-eventlume)
     }
 
     console.log(`[API] Total new events extracted: ${totalNewEvents}`);
@@ -1176,6 +1460,15 @@ ${scrapedContent.substring(0, 200000)}`,
       headers: { 'Content-Type': 'application/json' },
     }).catch(err => {
       console.error('[API] Failed to trigger geocoding:', err);
+    });
+
+    // Trigger automatic enrichment in background (don't wait for it)
+    console.log('[API] Triggering automatic enrichment...');
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://ephemera-nyc-0c9477e4fde1.herokuapp.com'}/api/events/enrich`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    }).catch(err => {
+      console.error('[API] Failed to trigger enrichment:', err);
     });
 
     return NextResponse.json({
