@@ -44,43 +44,41 @@ class EventsViewModel: ObservableObject {
         filteredEvents.filter { $0.lat != nil && $0.lng != nil }
     }
 
-    private func matchesTimeFilter(event: Event) -> Bool {
-        guard let timeString = event.time else { return true }
-
-        // Parse the date from the time string
-        let eventDate = parseEventDate(from: timeString)
-
-        switch timeFilter {
-        case .today:
-            return isToday(date: eventDate, timeString: timeString)
-        case .tomorrow:
-            return isTomorrow(date: eventDate, timeString: timeString)
-        case .thisWeek:
-            return isThisWeek(date: eventDate, timeString: timeString)
-        }
+    // Parse a YYYY-MM-DD date string into a Date
+    private func parseDateField(_ dateStr: String) -> Date? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone(identifier: "America/New_York")
+        return formatter.date(from: dateStr)
     }
 
-    private func parseEventDate(from timeString: String) -> Date? {
-        // Try to extract month and day
-        let months = ["january": 1, "february": 2, "march": 3, "april": 4, "may": 5, "june": 6,
-                      "july": 7, "august": 8, "september": 9, "october": 10, "november": 11, "december": 12,
-                      "jan": 1, "feb": 2, "mar": 3, "apr": 4, "jun": 6, "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12]
+    // Get today's date string in YYYY-MM-DD format (Eastern Time)
+    private func todayISO() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone(identifier: "America/New_York")
+        return formatter.string(from: Date())
+    }
+
+    // Fallback: infer date from time string for events without a date field
+    private func inferDateFromTime(_ timeString: String) -> Date? {
+        let months: [String: Int] = [
+            "january": 1, "february": 2, "march": 3, "april": 4, "may": 5, "june": 6,
+            "july": 7, "august": 8, "september": 9, "october": 10, "november": 11, "december": 12,
+            "jan": 1, "feb": 2, "mar": 3, "apr": 4, "jun": 6, "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12
+        ]
 
         let lowercased = timeString.lowercased()
-
-        // Find month
         var month: Int?
         var day: Int?
 
-        for (monthName, monthNumber) in months {
-            if lowercased.contains(monthName) {
-                month = monthNumber
-                // Try to find day number after month
-                if let range = lowercased.range(of: monthName) {
-                    let afterMonth = String(lowercased[range.upperBound...])
-                    // Extract first number
-                    if let dayMatch = afterMonth.firstMatch(of: /\d+/) {
-                        day = Int(dayMatch.0)
+        for (name, num) in months {
+            if lowercased.contains(name) {
+                month = num
+                if let range = lowercased.range(of: name) {
+                    let after = String(lowercased[range.upperBound...])
+                    if let match = after.firstMatch(of: /\d+/) {
+                        day = Int(match.0)
                     }
                 }
                 break
@@ -89,7 +87,6 @@ class EventsViewModel: ObservableObject {
 
         guard let m = month, let d = day else { return nil }
 
-        // Construct date with current year
         var components = DateComponents()
         components.year = Calendar.current.component(.year, from: Date())
         components.month = m
@@ -98,46 +95,33 @@ class EventsViewModel: ObservableObject {
         return Calendar.current.date(from: components)
     }
 
-    private func isToday(date: Date?, timeString: String) -> Bool {
-        // If can't parse date, show "ongoing" events on all days
-        if timeString.lowercased().contains("ongoing") {
-            return true
-        }
-
-        guard let eventDate = date else { return false }
-
-        return Calendar.current.isDateInToday(eventDate)
-    }
-
-    private func isTomorrow(date: Date?, timeString: String) -> Bool {
-        // Always show "ongoing" events
-        if timeString.lowercased().contains("ongoing") {
-            return true
-        }
-
-        guard let eventDate = date else { return false }
-
-        return Calendar.current.isDateInTomorrow(eventDate)
-    }
-
-    private func isThisWeek(date: Date?, timeString: String) -> Bool {
-        // Always show "ongoing" events
-        if timeString.lowercased().contains("ongoing") {
-            return true
-        }
-
-        guard let eventDate = date else { return false }
-
-        let calendar = Calendar.current
-        let now = Date()
-
-        // Get start and end of current week
-        guard let weekStart = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now)),
-              let weekEnd = calendar.date(byAdding: .day, value: 7, to: weekStart) else {
+    private func matchesTimeFilter(event: Event) -> Bool {
+        // Prefer structured date field, fall back to parsing time string
+        let eventDate: Date?
+        if let dateStr = event.date {
+            eventDate = parseDateField(dateStr)
+        } else if let timeStr = event.time {
+            eventDate = inferDateFromTime(timeStr)
+        } else {
             return false
         }
+        guard let eventDate else { return false }
 
-        return eventDate >= weekStart && eventDate < weekEnd
+        let calendar = Calendar.current
+
+        switch timeFilter {
+        case .today:
+            return calendar.isDateInToday(eventDate)
+        case .tomorrow:
+            return calendar.isDateInTomorrow(eventDate)
+        case .thisWeek:
+            let now = Date()
+            guard let weekStart = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now)),
+                  let weekEnd = calendar.date(byAdding: .day, value: 7, to: weekStart) else {
+                return false
+            }
+            return eventDate >= weekStart && eventDate < weekEnd
+        }
     }
 
     func loadEvents() async {

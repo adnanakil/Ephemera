@@ -8,6 +8,7 @@ interface Event {
   title: string;
   description: string;
   time: string;
+  date?: string;
   location: string;
   category?: string;
   borough?: string;
@@ -16,6 +17,7 @@ interface Event {
   lng?: number;
   link?: string;
   ticketLink?: string;
+  enriched?: boolean;
 }
 
 interface EventsResponse {

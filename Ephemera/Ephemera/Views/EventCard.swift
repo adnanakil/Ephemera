@@ -13,7 +13,21 @@ struct EventCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             // Date and time
-            if let eventTime = event.time, !eventTime.isEmpty {
+            if let dateStr = event.date, let displayDate = formatDateField(dateStr) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(displayDate)
+                        .font(.title)
+                        .fontWeight(.light)
+                        .foregroundColor(Color(hex: "3D3426"))
+
+                    if let eventTime = event.time, let timeOnly = extractTimePortion(eventTime), !timeOnly.isEmpty {
+                        Text(timeOnly)
+                            .font(.subheadline)
+                            .fontWeight(.light)
+                            .foregroundColor(Color(hex: "6B5D4F"))
+                    }
+                }
+            } else if let eventTime = event.time, !eventTime.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
                     if let (date, dayTime) = parseTime(eventTime) {
                         Text(date)
@@ -119,6 +133,27 @@ struct EventCard: View {
         )
     }
 
+    // Format a YYYY-MM-DD string to display like "February 15"
+    private func formatDateField(_ dateStr: String) -> String? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        guard let date = formatter.date(from: dateStr) else { return nil }
+        let display = DateFormatter()
+        display.dateFormat = "MMMM d"
+        return display.string(from: date)
+    }
+
+    // Extract time portion from a time string (e.g., "7:00 PM" or "7:00 PM - 10:00 PM")
+    private func extractTimePortion(_ timeString: String) -> String? {
+        let pattern = "\\d{1,2}:\\d{2}\\s*(?:AM|PM|am|pm)(?:\\s*-\\s*\\d{1,2}:\\d{2}\\s*(?:AM|PM|am|pm))?"
+        if let regex = try? NSRegularExpression(pattern: pattern, options: []),
+           let match = regex.firstMatch(in: timeString, range: NSRange(timeString.startIndex..., in: timeString)),
+           let range = Range(match.range, in: timeString) {
+            return String(timeString[range])
+        }
+        return nil
+    }
+
     private func parseTime(_ timeString: String) -> (date: String, dayTime: String)? {
         // Try to extract date pattern
         let pattern = "(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\s+\\d{1,2}(?:\\s*-\\s*(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)?\\s*\\d{1,2})?"
@@ -168,6 +203,7 @@ extension Color {
         title: "Sample Event",
         description: "This is a sample event description that shows how the card will look.",
         time: "October 30, Thursday, 7:00 PM",
+        date: "2026-10-30",
         location: "Central Park, Manhattan",
         borough: "Manhattan",
         neighborhood: "Central Park",

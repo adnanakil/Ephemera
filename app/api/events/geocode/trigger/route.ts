@@ -8,6 +8,7 @@ interface Event {
   title: string;
   description: string;
   time: string;
+  date?: string;
   location: string;
   category?: string;
   borough?: string;

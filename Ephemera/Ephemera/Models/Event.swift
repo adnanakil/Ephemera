@@ -12,6 +12,7 @@ struct Event: Identifiable, Codable {
     let title: String
     let description: String
     let time: String?
+    let date: String?
     let location: String?
     let borough: String?
     let neighborhood: String?
@@ -21,14 +22,15 @@ struct Event: Identifiable, Codable {
     let ticketLink: String?
 
     enum CodingKeys: String, CodingKey {
-        case title, description, time, location, borough, neighborhood, lat, lng, link, ticketLink
+        case title, description, time, date, location, borough, neighborhood, lat, lng, link, ticketLink
     }
 
     // Regular initializer for manual creation (used in previews/tests)
-    init(title: String, description: String, time: String? = nil, location: String? = nil, borough: String? = nil, neighborhood: String? = nil, lat: Double? = nil, lng: Double? = nil, link: String? = nil, ticketLink: String? = nil) {
+    init(title: String, description: String, time: String? = nil, date: String? = nil, location: String? = nil, borough: String? = nil, neighborhood: String? = nil, lat: Double? = nil, lng: Double? = nil, link: String? = nil, ticketLink: String? = nil) {
         self.title = title
         self.description = description
         self.time = time
+        self.date = date
         self.location = location
         self.borough = borough
         self.neighborhood = neighborhood
@@ -52,6 +54,9 @@ struct Event: Identifiable, Codable {
         // Handle optional strings, treating empty strings as nil
         let timeString = try? container.decode(String.self, forKey: .time)
         time = timeString?.isEmpty == false ? timeString : nil
+
+        let dateString = try? container.decode(String.self, forKey: .date)
+        date = dateString?.isEmpty == false ? dateString : nil
 
         let locationString = try? container.decode(String.self, forKey: .location)
         location = locationString?.isEmpty == false ? locationString : nil

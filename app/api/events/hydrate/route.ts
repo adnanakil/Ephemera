@@ -7,6 +7,7 @@ interface Event {
   title: string;
   description: string;
   time: string;
+  date?: string;
   location: string;
   borough?: string;
   neighborhood?: string;
@@ -159,6 +160,7 @@ export async function POST(request: NextRequest) {
               content: `Extract event details from this page. Return a JSON object with:
 - description: A 2-3 sentence description of the event
 - location: The full address or venue with neighborhood (be specific)
+- date: The event date in YYYY-MM-DD format (e.g. "2026-02-15"). For multi-day events, use the START date.
 - time: COMPLETE date and time (MUST include the full date like "Thursday, October 30" or "November 1, 2024", plus time like "7:00 PM - 11:00 PM". Never return just "7:30 PM" without the date!)
 
 Current data: ${JSON.stringify(event)}
@@ -168,7 +170,7 @@ ${detailContent.substring(0, 8000)}
 
 IMPORTANT: Extract the FULL date and time. Look carefully for the date - it might be in headings, metadata, or the event details section. If you find the date and time separately, combine them into one complete string.
 
-Return ONLY a JSON object like: {"description":"...","location":"...","time":"..."}`,
+Return ONLY a JSON object like: {"description":"...","location":"...","date":"YYYY-MM-DD","time":"..."}`,
             },
           ],
         });
@@ -200,6 +202,12 @@ Return ONLY a JSON object like: {"description":"...","location":"...","time":"..
                 }
               }
 
+              // Prefer detail page date if it's valid YYYY-MM-DD
+              let mergedDate = events[eventIndex].date;
+              if (detailedData.date && /^\d{4}-\d{2}-\d{2}$/.test(detailedData.date)) {
+                mergedDate = detailedData.date;
+              }
+
               events[eventIndex] = {
                 ...events[eventIndex],
                 description: (detailedData.description && detailedData.description.length > 50)
@@ -209,6 +217,7 @@ Return ONLY a JSON object like: {"description":"...","location":"...","time":"..
                   ? detailedData.location
                   : events[eventIndex].location,
                 time: mergedTime,
+                date: mergedDate,
               };
 
               // Re-parse location for updated coordinates (with geocoding)

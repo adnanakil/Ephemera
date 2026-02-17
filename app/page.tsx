@@ -12,6 +12,7 @@ interface Event {
   title: string;
   description: string;
   time: string;
+  date?: string;
   location: string;
   borough?: string;
   neighborhood?: string;
@@ -60,76 +61,23 @@ export default function Home() {
     loadCachedEvents();
   }, []);
 
-  // Helper function to get the current date in New York
-  const getNowInNewYork = () => {
-    return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  // Helper to format a YYYY-MM-DD date string to display like "February 15"
+  const formatDateForDisplay = (dateStr: string): string => {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'];
+    return `${monthNames[month - 1]} ${day}`;
   };
 
-  // Helper function to parse date and time from time string
-  const parseEventDateTime = (timeString: string): Date | null => {
-    if (!timeString) return null;
-  
-    const months: Record<string, number> = {
-      'january': 0, 'february': 1, 'march': 2, 'april': 3, 'may': 4, 'june': 5,
-      'july': 6, 'august': 7, 'september': 8, 'october': 9, 'november': 10, 'december': 11,
-      'jan': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'jun': 5, 'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'dec': 11
-    };
-  
-    const lowerTime = timeString.toLowerCase();
-    let month: number | null = null;
-    let day: number | null = null;
-    let hour = 12; // Default to noon if no time is found
-    let minute = 0;
-  
-    for (const [monthName, monthNum] of Object.entries(months)) {
-      if (lowerTime.includes(monthName)) {
-        month = monthNum;
-        const afterMonth = timeString.substring(lowerTime.indexOf(monthName) + monthName.length);
-        
-        // Regex to find a single day or a date range (e.g., "7", "7-9", "7 - 9")
-        const dayMatch = afterMonth.match(/(\d+)(?:\s*-\s*(\d+))?/);
-        if (dayMatch) {
-          // If a range is found (e.g., "7-9"), use the end date ("9"). Otherwise, use the single day ("7").
-          const endDay = dayMatch[2] || dayMatch[1];
-          day = parseInt(endDay);
-        }
-        break;
-      }
-    }
-  
-    const timeMatch = lowerTime.match(/(\d{1,2})(:(\d{2}))?\s*(am|pm)?/);
-    if (timeMatch) {
-      hour = parseInt(timeMatch[1]);
-      minute = timeMatch[3] ? parseInt(timeMatch[3]) : 0;
-      const isPm = timeMatch[4] === 'pm';
-  
-      if (isPm && hour < 12) hour += 12;
-      else if (!isPm && hour === 12) hour = 0;
-    }
-  
-    if (month !== null && day !== null) {
-      const now = getNowInNewYork();
-      let year = now.getFullYear();
-      
-      const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
-      let eventDate = new Date(dateString);
-
-      if (eventDate < now && (now.getTime() - eventDate.getTime()) > 24 * 60 * 60 * 1000) {
-        year += 1;
-        const nextYearDateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
-        eventDate = new Date(nextYearDateString);
-      }
-  
-      return eventDate;
-    }
-  
-    return null;
+  // Get today's ISO date string in Eastern Time
+  const getTodayISO = () => {
+    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   };
 
-  // Filter events based on borough and neighborhood
+  // Filter events based on borough, neighborhood, and date
   const filteredEvents = events
     .filter((event) => {
-      // First, filter by borough and neighborhood
       const boroughMatch = selectedBorough === 'All' || event.borough === selectedBorough;
       const neighborhoodMatch =
         neighborhoodSearch === '' ||
@@ -140,29 +88,18 @@ export default function Home() {
         return false;
       }
 
-      // Then, filter by date
-      const eventEndDate = parseEventDateTime(event.time);
-      const nowInNY = getNowInNewYork();
-      nowInNY.setHours(0, 0, 0, 0); // Set to the beginning of the day for comparison
-
-      if (eventEndDate) {
-        // If we have a date, it must be on or after today
-        return eventEndDate >= nowInNY;
-      } else {
-        // If we can't parse a date, show the event only if its time string includes "ongoing"
-        // This handles events that are long-running without specific end dates in the title
-        return event.time?.toLowerCase().includes('ongoing') ?? false;
+      // Filter by date field
+      if (event.date) {
+        return event.date >= getTodayISO();
       }
+      // Events without a date: keep only if no time info at all
+      return !event.time;
     })
     .sort((a, b) => {
-      const dateA = parseEventDateTime(a.time);
-      const dateB = parseEventDateTime(b.time);
-
-      if (!dateA && !dateB) return 0;
-      if (!dateA) return 1;
-      if (!dateB) return -1;
-
-      return dateA.getTime() - dateB.getTime();
+      if (!a.date && !b.date) return 0;
+      if (!a.date) return 1;
+      if (!b.date) return -1;
+      return a.date.localeCompare(b.date);
     });
 
   return (
@@ -298,22 +235,19 @@ export default function Home() {
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {filteredEvents.map((event, index) => {
-                    // Parse time to extract date vs day/time
+                    // Use structured date field for display, fall back to time string
                     let displayDate = '';
                     let displayDayTime = '';
 
-                    if (event.time) {
-                      // Try to extract date pattern (e.g., "October 30", "Nov 1", "October 30-November 10")
-                      const dateMatch = event.time.match(/(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}(?:\s*-\s*(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)?\s*\d{1,2})?/i);
-
-                      if (dateMatch) {
-                        displayDate = dateMatch[0];
-                        // Everything else is day/time
-                        displayDayTime = event.time.replace(dateMatch[0], '').replace(/^[,\s]+/, '').trim();
-                      } else {
-                        // Fallback: use the whole time string
-                        displayDate = event.time;
+                    if (event.date) {
+                      displayDate = formatDateForDisplay(event.date);
+                      // Extract time portion from the time string (e.g., "7:00 PM")
+                      if (event.time) {
+                        const timeMatch = event.time.match(/\d{1,2}:\d{2}\s*(?:AM|PM|am|pm)(?:\s*-\s*\d{1,2}:\d{2}\s*(?:AM|PM|am|pm))?/);
+                        displayDayTime = timeMatch ? timeMatch[0] : '';
                       }
+                    } else if (event.time) {
+                      displayDate = event.time;
                     }
 
                     return (

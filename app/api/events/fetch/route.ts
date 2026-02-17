@@ -8,6 +8,7 @@ interface Event {
   title: string;
   description: string;
   time: string;
+  date?: string;
   location: string;
   category?: string;
   borough?: string;
@@ -490,6 +491,57 @@ function isEventPast(event: Event): boolean {
   return eventDate < todayET;
 }
 
+// Helper function to validate/infer a structured date field from an event
+function inferDateField(event: { date?: string; time?: string }): string | undefined {
+  // If date is already valid YYYY-MM-DD, return it
+  if (event.date && /^\d{4}-\d{2}-\d{2}$/.test(event.date)) {
+    return event.date;
+  }
+
+  // Try to parse from time string as fallback
+  if (!event.time) return undefined;
+
+  const months: Record<string, number> = {
+    'january': 1, 'february': 2, 'march': 3, 'april': 4, 'may': 5, 'june': 6,
+    'july': 7, 'august': 8, 'september': 9, 'october': 10, 'november': 11, 'december': 12,
+    'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'jun': 6, 'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12
+  };
+
+  const lowerTime = event.time.toLowerCase();
+  let month: number | null = null;
+  let day: number | null = null;
+
+  for (const [monthName, monthNum] of Object.entries(months)) {
+    if (lowerTime.includes(monthName)) {
+      month = monthNum;
+      const afterMonth = lowerTime.substring(lowerTime.indexOf(monthName) + monthName.length);
+      const dayMatch = afterMonth.match(/\d+/);
+      if (dayMatch) {
+        day = parseInt(dayMatch[0]);
+      }
+      break;
+    }
+  }
+
+  if (month === null || day === null) return undefined;
+
+  // Infer year: use current year, roll forward to next year if date is >30 days in the past
+  const nowET = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  let year = nowET.getFullYear();
+  const candidateDate = new Date(year, month - 1, day);
+  const todayET = new Date(nowET);
+  todayET.setHours(0, 0, 0, 0);
+
+  if (candidateDate < todayET) {
+    const diffDays = (todayET.getTime() - candidateDate.getTime()) / (24 * 60 * 60 * 1000);
+    if (diffDays > 30) {
+      year += 1;
+    }
+  }
+
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
 async function fetchEventsLogic() {
   console.log('[API] Fetching NYC events');
 
@@ -652,6 +704,7 @@ async function fetchEventsLogic() {
 For each event, provide:
 - title: The event name
 - description: Brief description (2-3 sentences max)
+- date: The event date in YYYY-MM-DD format (e.g. "2026-02-15"). For multi-day events, use the START date.
 - time: FULL date and time (MUST include the MONTH and DAY NUMBER like "November 9" or "Dec 15", plus the time like "7:00 PM". NEVER use day-of-week names like "Saturday" or "Thursday" alone!)
 - location: Where it takes place (be specific, include neighborhood or venue name)
 - category: Choose ONE category that best fits the event from these options: "Cultural & Arts", "Fitness & Wellness", "Sports & Recreation", "Markets & Shopping", "Community & Volunteering", "Food & Dining", "Holiday & Seasonal", "Professional & Networking", "Educational & Literary"
@@ -677,7 +730,7 @@ OTHER REQUIREMENTS:
 
 Return ONLY a valid JSON array of events, nothing else. NO explanatory text, NO comments.
 Format:
-[{"title":"...","description":"...","time":"...","location":"...","category":"...","link":"...","ticketLink":"..."}]
+[{"title":"...","date":"YYYY-MM-DD","description":"...","time":"...","location":"...","category":"...","link":"...","ticketLink":"..."}]
 
 Content to parse:
 ${scrapedContent.substring(0, 200000)}`,
@@ -760,9 +813,12 @@ ${scrapedContent.substring(0, 200000)}`,
               const { borough, neighborhood, lat, lng } = await parseLocation(event.location || '', true);
               // Infer actual dates from day-of-week references
               const inferredTime = inferDateFromDayOfWeek(event.time || '');
+              // Infer/validate the structured date field
+              const date = inferDateField({ ...event, time: inferredTime });
               return {
                 ...event,
                 time: inferredTime,
+                date,
                 borough,
                 neighborhood,
                 lat,
@@ -1111,6 +1167,7 @@ export async function POST(request: NextRequest) {
 For the event, provide:
 - title: The event name
 - description: Brief description (2-3 sentences max)
+- date: The event date in YYYY-MM-DD format (e.g. "2026-02-15"). For multi-day events, use the START date.
 - time: FULL date and time (MUST include MONTH and DAY NUMBER like "November 9", plus time like "7:00 PM". NEVER use day-of-week names like "Saturday" alone!)
 - location: Where it takes place (be specific, include venue name)
 - category: Choose ONE category that best fits the event from these options: "Cultural & Arts", "Fitness & Wellness", "Sports & Recreation", "Markets & Shopping", "Community & Volunteering", "Food & Dining", "Holiday & Seasonal", "Professional & Networking", "Educational & Literary"
@@ -1125,7 +1182,7 @@ CRITICAL REQUIREMENTS:
 
 Return ONLY a valid JSON object for this single event, nothing else. NO explanatory text, NO comments.
 Format:
-{"title":"...","description":"...","time":"...","location":"...","category":"...","link":"...","ticketLink":"..."}
+{"title":"...","date":"YYYY-MM-DD","description":"...","time":"...","location":"...","category":"...","link":"...","ticketLink":"..."}
 
 Content to parse:
 ${scrapedContent.substring(0, 100000)}`,
@@ -1159,7 +1216,8 @@ ${scrapedContent.substring(0, 100000)}`,
               [event].map(async (e: Event) => {
                 const { borough, neighborhood, lat, lng } = await parseLocation(e.location || '', false);
                 const inferredTime = inferDateFromDayOfWeek(e.time || '');
-                return { ...e, time: inferredTime, borough, neighborhood, lat, lng };
+                const date = inferDateField({ ...e, time: inferredTime });
+                return { ...e, time: inferredTime, date, borough, neighborhood, lat, lng };
               })
             );
 
@@ -1273,6 +1331,7 @@ ${scrapedContent.substring(0, 100000)}`,
 For each event, provide:
 - title: The event name
 - description: Brief description (2-3 sentences max)
+- date: The event date in YYYY-MM-DD format (e.g. "2026-02-15"). For multi-day events, use the START date.
 - time: FULL date and time (MUST include the MONTH and DAY NUMBER like "November 9" or "Dec 15", plus the time like "7:00 PM". NEVER use day-of-week names like "Saturday" or "Thursday" alone!)
 - location: Where it takes place (be specific, include neighborhood or venue name)
 - category: Choose ONE category that best fits the event from these options: "Cultural & Arts", "Fitness & Wellness", "Sports & Recreation", "Markets & Shopping", "Community & Volunteering", "Food & Dining", "Holiday & Seasonal", "Professional & Networking", "Educational & Literary"
@@ -1298,7 +1357,7 @@ OTHER REQUIREMENTS:
 
 Return ONLY a valid JSON array of events, nothing else. NO explanatory text, NO comments.
 Format:
-[{"title":"...","description":"...","time":"...","location":"...","category":"...","link":"...","ticketLink":"..."}]
+[{"title":"...","date":"YYYY-MM-DD","description":"...","time":"...","location":"...","category":"...","link":"...","ticketLink":"..."}]
 
 Content to parse:
 ${scrapedContent.substring(0, 200000)}`,
@@ -1380,9 +1439,12 @@ ${scrapedContent.substring(0, 200000)}`,
                 const { borough, neighborhood, lat, lng } = await parseLocation(event.location || '', false);
                 // Infer actual dates from day-of-week references
                 const inferredTime = inferDateFromDayOfWeek(event.time || '');
+                // Infer/validate the structured date field
+                const date = inferDateField({ ...event, time: inferredTime });
                 return {
                   ...event,
                   time: inferredTime,
+                  date,
                   borough,
                   neighborhood,
                   lat,

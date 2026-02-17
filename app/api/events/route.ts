@@ -7,6 +7,7 @@ interface Event {
   title: string;
   description: string;
   time: string;
+  date?: string;
   location: string;
   category?: string;
   borough?: string;
@@ -15,6 +16,7 @@ interface Event {
   lng?: number;
   link?: string;
   ticketLink?: string;
+  enriched?: boolean;
 }
 
 interface EventsResponse {
@@ -22,6 +24,50 @@ interface EventsResponse {
   count: number;
   events: Event[];
   lastFetched: string | null;
+}
+
+// Fallback: infer date from time string for events that don't have a date field yet
+function inferDateFromTime(timeString: string): string | undefined {
+  if (!timeString) return undefined;
+
+  const months: Record<string, number> = {
+    'january': 1, 'february': 2, 'march': 3, 'april': 4, 'may': 5, 'june': 6,
+    'july': 7, 'august': 8, 'september': 9, 'october': 10, 'november': 11, 'december': 12,
+    'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'jun': 6, 'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12
+  };
+
+  const lowerTime = timeString.toLowerCase();
+  let month: number | null = null;
+  let day: number | null = null;
+
+  for (const [monthName, monthNum] of Object.entries(months)) {
+    if (lowerTime.includes(monthName)) {
+      month = monthNum;
+      const afterMonth = lowerTime.substring(lowerTime.indexOf(monthName) + monthName.length);
+      const dayMatch = afterMonth.match(/\d+/);
+      if (dayMatch) {
+        day = parseInt(dayMatch[0]);
+      }
+      break;
+    }
+  }
+
+  if (month === null || day === null) return undefined;
+
+  const nowET = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  let year = nowET.getFullYear();
+  const candidateDate = new Date(year, month - 1, day);
+  const todayET = new Date(nowET);
+  todayET.setHours(0, 0, 0, 0);
+
+  if (candidateDate < todayET) {
+    const diffDays = (todayET.getTime() - candidateDate.getTime()) / (24 * 60 * 60 * 1000);
+    if (diffDays > 30) {
+      year += 1;
+    }
+  }
+
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
 export async function GET(request: NextRequest) {
@@ -40,63 +86,30 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Parse event date helper function
-    const parseEventDate = (timeStr: string) => {
-      const match = timeStr.match(/^(\w+)\s+(\d+),\s+(.+)$/);
-      if (!match) return null;
-
-      const [_, month, day, timeRange] = match;
-      const year = new Date().getFullYear();
-
-      // Extract the start time (e.g., "12 p.m." from "12 p.m. to 3 p.m.")
-      const startTimeMatch = timeRange.match(/^(\d+):?(\d+)?\s*(a\.m\.|p\.m\.|am|pm)/i);
-      let hour = 0;
-      let minute = 0;
-
-      if (startTimeMatch) {
-        hour = parseInt(startTimeMatch[1]);
-        minute = startTimeMatch[2] ? parseInt(startTimeMatch[2]) : 0;
-        const isPM = startTimeMatch[3].toLowerCase().includes('p');
-
-        if (isPM && hour !== 12) hour += 12;
-        if (!isPM && hour === 12) hour = 0;
-      }
-
-      // Create date string like "November 9 2025"
-      const dateStr = `${month} ${day} ${year} ${hour}:${minute}`;
-      return new Date(dateStr);
-    };
-
-    // Get current time in ET (UTC-5 or UTC-4 depending on DST)
+    // Get today's date in YYYY-MM-DD format (Eastern Time)
     const nowET = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+    const todayISO = `${nowET.getFullYear()}-${String(nowET.getMonth() + 1).padStart(2, '0')}-${String(nowET.getDate()).padStart(2, '0')}`;
 
-    // Filter out past events and sort chronologically
-    const filteredAndSortedEvents = [...cachedData.events]
+    // Backfill date field for events that don't have one yet
+    const eventsWithDate = cachedData.events.map(event => {
+      if (event.date) return event;
+      const inferred = event.time ? inferDateFromTime(event.time) : undefined;
+      return inferred ? { ...event, date: inferred } : event;
+    });
+
+    const filteredAndSortedEvents = eventsWithDate
       .filter((event) => {
-        try {
-          // Filter out events with relative dates like "Today", "Tomorrow", etc.
-          const lowerTime = event.time.toLowerCase();
-          if (lowerTime.includes('today') || lowerTime.includes('tomorrow') || lowerTime.includes('yesterday')) {
-            return false; // Remove stale events with relative dates
-          }
-
-          const eventDate = parseEventDate(event.time);
-          if (!eventDate) return true; // Keep events with unparseable dates
-          return eventDate >= nowET; // Only keep future events
-        } catch {
-          return true; // Keep events that fail to parse
+        if (event.date) {
+          return event.date >= todayISO;
         }
+        // Events with no date at all: exclude
+        return false;
       })
       .sort((a, b) => {
-        try {
-          const dateA = parseEventDate(a.time);
-          const dateB = parseEventDate(b.time);
-
-          if (!dateA || !dateB) return 0;
-          return dateA.getTime() - dateB.getTime();
-        } catch {
-          return 0;
-        }
+        if (!a.date && !b.date) return 0;
+        if (!a.date) return 1;
+        if (!b.date) return -1;
+        return a.date.localeCompare(b.date);
       });
 
     return NextResponse.json({
