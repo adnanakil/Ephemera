@@ -192,70 +192,83 @@ export default function VenuesPage() {
   const totalVenues = Object.values(VENUES).reduce((acc, venues) => acc + venues.length, 0);
 
   return (
-    <div className="min-h-screen bg-[#F5F1E8] text-[#3D3426]">
-      <div className="container mx-auto px-8 py-20">
-        <div className="max-w-6xl mx-auto">
-          <a href="/" className="text-[#6B5D4F] hover:text-[#3D3426] font-light mb-8 inline-block">
-            ← Back to Events
+    <div className="min-h-screen bg-[#0A0A0B] text-[#EDECE8]">
+      {/* Subtle top gradient */}
+      <div className="fixed top-0 left-0 right-0 h-[400px] bg-gradient-to-b from-[#1a1210] to-transparent pointer-events-none z-0" />
+
+      <div className="relative z-10">
+        {/* Nav */}
+        <nav className="container mx-auto px-8 pt-8 flex justify-between items-center max-w-6xl">
+          <a href="/" className="text-sm text-[#5C5A54] hover:text-[#E8503A] transition-colors font-sans">
+            &larr; Events
           </a>
+          <div className="text-sm text-[#5C5A54] font-sans">{totalVenues} sources</div>
+        </nav>
 
-          <h1 className="text-[80px] leading-[0.95] font-light tracking-tight mb-6">
-            Venues
-          </h1>
-          <p className="text-xl text-[#6B5D4F] mb-8 font-light max-w-2xl">
-            We pull events from {totalVenues} venues and sources across New York City
-          </p>
+        <div className="container mx-auto px-8 pt-16 pb-24">
+          <div className="max-w-6xl mx-auto">
+            {/* Hero */}
+            <header className="mb-16">
+              <h1 className="text-[64px] md:text-[88px] leading-[0.9] font-display font-800 tracking-[-0.04em] mb-4">
+                Venues
+              </h1>
+              <div className="w-16 h-1 bg-[#E8503A] rounded-full mb-6" />
+              <p className="text-xl text-[#8C8A82] font-sans font-light max-w-lg">
+                {totalVenues} venues and sources across New York City
+              </p>
+            </header>
 
-          {/* Quick stats */}
-          <div className="flex flex-wrap gap-3 mb-16">
-            {categories.map((category) => (
-              <a
-                key={category}
-                href={`#${category.toLowerCase().replace(/\s+/g, '-')}`}
-                className="px-4 py-2 bg-[#E8DED0] text-[#6B5D4F] rounded-full text-sm font-light hover:bg-[#D4C9B7] transition-all"
-              >
-                {category} ({VENUES[category as keyof typeof VENUES].length})
-              </a>
-            ))}
-          </div>
+            {/* Category pills */}
+            <div className="flex flex-wrap gap-2 mb-16">
+              {categories.map((category) => (
+                <a
+                  key={category}
+                  href={`#${category.toLowerCase().replace(/\s+/g, '-')}`}
+                  className="px-4 py-2 bg-[#1C1C1F] text-[#8C8A82] rounded-lg text-sm font-sans border border-[#252528] hover:border-[#3A3A3E] hover:text-[#EDECE8] transition-all"
+                >
+                  {category} <span className="text-[#5C5A54]">({VENUES[category as keyof typeof VENUES].length})</span>
+                </a>
+              ))}
+            </div>
 
-          {/* Venue listings by category */}
-          <div className="space-y-16">
-            {categories.map((category) => (
-              <section key={category} id={category.toLowerCase().replace(/\s+/g, '-')}>
-                <h2 className="text-3xl font-light mb-8 text-[#3D3426] border-b border-[#E0D5C7] pb-4">
-                  {category}
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {VENUES[category as keyof typeof VENUES].map((venue, index) => (
-                    <a
-                      key={index}
-                      href={venue.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-white rounded-2xl border border-[#E0D5C7] p-6 hover:border-[#3D3426] transition-all group"
-                    >
-                      <h3 className="text-lg font-light text-[#3D3426] group-hover:text-[#6B5D4F] transition-colors">
-                        {venue.name}
-                      </h3>
-                      <p className="text-sm text-[#8B7D6F] font-light mt-2 truncate">
-                        {venue.url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]}
-                      </p>
-                    </a>
-                  ))}
-                </div>
-              </section>
-            ))}
-          </div>
+            {/* Venue listings */}
+            <div className="space-y-16">
+              {categories.map((category) => (
+                <section key={category} id={category.toLowerCase().replace(/\s+/g, '-')}>
+                  <h2 className="font-display font-700 text-2xl mb-6 text-[#EDECE8] pb-4 border-b border-[#252528]">
+                    {category}
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {VENUES[category as keyof typeof VENUES].map((venue, index) => (
+                      <a
+                        key={index}
+                        href={venue.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="card-glow bg-[#141416] rounded-xl border border-[#252528] p-5 group"
+                      >
+                        <h3 className="text-sm font-sans font-medium text-[#EDECE8] group-hover:text-[#E8503A] transition-colors">
+                          {venue.name}
+                        </h3>
+                        <p className="text-xs text-[#5C5A54] font-sans mt-1.5 truncate">
+                          {venue.url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]}
+                        </p>
+                      </a>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
 
-          {/* Footer note */}
-          <div className="mt-20 pt-8 border-t border-[#E0D5C7]">
-            <p className="text-sm text-[#8B7D6F] font-light">
-              Missing a venue? Let us know at{' '}
-              <a href="mailto:hello@ephemera.events" className="text-[#3D3426] hover:underline">
-                hello@ephemera.events
-              </a>
-            </p>
+            {/* Footer */}
+            <div className="mt-24 pt-8 border-t border-[#252528]">
+              <p className="text-sm text-[#5C5A54] font-sans">
+                Missing a venue?{' '}
+                <a href="mailto:hello@eventsh.nyc" className="text-[#8C8A82] hover:text-[#E8503A] transition-colors">
+                  Let us know
+                </a>
+              </p>
+            </div>
           </div>
         </div>
       </div>
