@@ -1,11 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 
 const EventsMap = dynamic(() => import('@/components/EventsMap'), {
   ssr: false,
   loading: () => <div className="h-[600px] w-full rounded-xl bg-[#141416] border border-[#252528] flex items-center justify-center text-[#5C5A54]">Loading map...</div>
+});
+
+const VenueMap = dynamic(() => import('@/components/VenueMap'), {
+  ssr: false,
+  loading: () => <div className="h-[180px] w-full rounded-lg bg-[#1C1C1F] border border-[#252528]" />
 });
 
 interface Event {
@@ -67,8 +72,33 @@ export default function Home() {
   const [selectedBorough, setSelectedBorough] = useState<string>('All');
   const [selectedType, setSelectedType] = useState<string>('All');
   const [neighborhoodSearch, setNeighborhoodSearch] = useState<string>('');
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [isFlipped, setIsFlipped] = useState(false);
   // Map view hidden for now but code kept for future use
   // const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+
+  const openEventModal = useCallback((event: Event) => {
+    setSelectedEvent(event);
+    setIsFlipped(false);
+    // Trigger flip after mount
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setIsFlipped(true));
+    });
+  }, []);
+
+  const closeEventModal = useCallback(() => {
+    setIsFlipped(false);
+    setTimeout(() => setSelectedEvent(null), 400);
+  }, []);
+
+  // Close modal on Escape key
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedEvent) closeEventModal();
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [selectedEvent, closeEventModal]);
 
   useEffect(() => {
     const loadCachedEvents = async () => {
@@ -299,7 +329,8 @@ export default function Home() {
                   return (
                     <div
                       key={index}
-                      className="animate-fade-up card-glow bg-[#141416] rounded-xl border border-[#252528] overflow-hidden group"
+                      onClick={() => openEventModal(event)}
+                      className="animate-fade-up card-glow bg-[#141416] rounded-xl border border-[#252528] overflow-hidden group cursor-pointer"
                       style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}
                     >
                       <div className="p-6">
@@ -351,7 +382,7 @@ export default function Home() {
                         )}
 
                         {/* Links */}
-                        <div className="flex gap-4 pt-4 border-t border-[#252528]">
+                        <div className="flex gap-4 pt-4 border-t border-[#252528]" onClick={(e) => e.stopPropagation()}>
                           {event.link && (
                             <a
                               href={event.link}
@@ -382,6 +413,157 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Event Modal with Flip Animation */}
+      {selectedEvent && (() => {
+        let modalDate = '';
+        let modalTime = '';
+        if (selectedEvent.date) {
+          modalDate = formatDateForDisplay(selectedEvent.date);
+          if (selectedEvent.time) {
+            const tm = selectedEvent.time.match(/\d{1,2}:\d{2}\s*(?:AM|PM|am|pm)(?:\s*-\s*\d{1,2}:\d{2}\s*(?:AM|PM|am|pm))?/);
+            modalTime = tm ? tm[0] : '';
+          }
+        } else if (selectedEvent.time) {
+          modalDate = selectedEvent.time;
+        }
+
+        const categoryLabel = Object.entries(EVENT_TYPE_MAP).find(
+          ([, v]) => v === selectedEvent.category
+        )?.[0] || selectedEvent.category;
+
+        return (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            onClick={closeEventModal}
+          >
+            {/* Backdrop */}
+            <div className={`absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300 ${isFlipped ? 'opacity-100' : 'opacity-0'}`} />
+
+            {/* Flip container */}
+            <div
+              className="relative w-full max-w-lg"
+              style={{ perspective: '1200px' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                className="relative w-full transition-transform duration-500 ease-out"
+                style={{
+                  transformStyle: 'preserve-3d',
+                  transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                }}
+              >
+                {/* Front face (invisible, just for the flip effect) */}
+                <div
+                  className="absolute inset-0 rounded-2xl bg-[#141416] border border-[#252528]"
+                  style={{ backfaceVisibility: 'hidden' }}
+                />
+
+                {/* Back face (the detail card) */}
+                <div
+                  className="relative rounded-2xl bg-[#141416] border border-[#252528] overflow-hidden"
+                  style={{
+                    backfaceVisibility: 'hidden',
+                    transform: 'rotateY(180deg)',
+                  }}
+                >
+                  {/* Close button */}
+                  <button
+                    onClick={closeEventModal}
+                    className="absolute top-4 right-4 text-[#5C5A54] hover:text-[#EDECE8] transition-colors z-10 text-2xl leading-none font-light"
+                  >
+                    &times;
+                  </button>
+
+                  <div className="p-8">
+                    {/* Date */}
+                    {modalDate && (
+                      <div className="flex items-baseline gap-3 mb-5">
+                        <span className="text-[#E8503A] font-display font-700 text-2xl tracking-tight">
+                          {modalDate}
+                        </span>
+                        {modalTime && (
+                          <span className="text-sm text-[#5C5A54] font-sans">
+                            {modalTime}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Title */}
+                    <h2 className="font-display font-700 text-2xl mb-4 text-[#EDECE8] leading-snug">
+                      {selectedEvent.title}
+                    </h2>
+
+                    {/* Full description */}
+                    <p className="text-[#8C8A82] text-sm leading-relaxed font-sans mb-6">
+                      {selectedEvent.description}
+                    </p>
+
+                    {/* Location */}
+                    {selectedEvent.location && (
+                      <div className="mb-4">
+                        <p className="text-xs uppercase tracking-widest text-[#5C5A54] font-sans mb-1">Location</p>
+                        <p className="text-sm text-[#EDECE8] font-sans">{selectedEvent.location}</p>
+                      </div>
+                    )}
+
+                    {/* Venue Map */}
+                    {selectedEvent.lat && selectedEvent.lng && (
+                      <div className="mb-5">
+                        <VenueMap lat={selectedEvent.lat} lng={selectedEvent.lng} name={selectedEvent.location} />
+                      </div>
+                    )}
+
+                    {/* Tags */}
+                    <div className="flex gap-2 flex-wrap mb-6">
+                      {selectedEvent.borough && (
+                        <span className="px-3 py-1 bg-[#1C1C1F] text-[#8C8A82] rounded-lg text-xs font-sans border border-[#252528]">
+                          {selectedEvent.borough}
+                        </span>
+                      )}
+                      {selectedEvent.neighborhood && (
+                        <span className="px-3 py-1 bg-[#1C1C1F] text-[#8C8A82] rounded-lg text-xs font-sans border border-[#252528]">
+                          {selectedEvent.neighborhood}
+                        </span>
+                      )}
+                      {categoryLabel && (
+                        <span className="px-3 py-1 bg-[#E8503A]/10 text-[#E8503A] rounded-lg text-xs font-sans border border-[#E8503A]/20">
+                          {categoryLabel}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="flex gap-3 pt-5 border-t border-[#252528]">
+                      {selectedEvent.link && (
+                        <a
+                          href={selectedEvent.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 text-center px-5 py-2.5 rounded-lg bg-[#1C1C1F] text-[#EDECE8] text-sm font-sans border border-[#252528] hover:border-[#3A3A3E] hover:bg-[#252528] transition-all"
+                        >
+                          Details &rarr;
+                        </a>
+                      )}
+                      {selectedEvent.ticketLink && (
+                        <a
+                          href={selectedEvent.ticketLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 text-center px-5 py-2.5 rounded-lg bg-[#E8503A] text-white text-sm font-sans hover:bg-[#D4442F] transition-all"
+                        >
+                          Tickets &rarr;
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
