@@ -308,7 +308,155 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lng: numb
   }
 }
 
-// Static fallback lookup (same as before)
+// Known venue → neighborhood mappings for venues whose address doesn't contain the neighborhood name
+const VENUE_NEIGHBORHOOD_MAP: Record<string, { borough: string; neighborhood: string }> = {
+  // Brooklyn venues
+  'brooklyn steel': { borough: 'Brooklyn', neighborhood: 'Williamsburg' },
+  'brooklyn bowl': { borough: 'Brooklyn', neighborhood: 'Williamsburg' },
+  'brooklyn paramount': { borough: 'Brooklyn', neighborhood: 'Downtown Brooklyn' },
+  'music hall of williamsburg': { borough: 'Brooklyn', neighborhood: 'Williamsburg' },
+  'rough trade': { borough: 'Brooklyn', neighborhood: 'Williamsburg' },
+  'national sawdust': { borough: 'Brooklyn', neighborhood: 'Williamsburg' },
+  'knitting factory': { borough: 'Brooklyn', neighborhood: 'Williamsburg' },
+  'baby\'s all right': { borough: 'Brooklyn', neighborhood: 'Williamsburg' },
+  'saint vitus': { borough: 'Brooklyn', neighborhood: 'Greenpoint' },
+  'the bell house': { borough: 'Brooklyn', neighborhood: 'Gowanus' },
+  'bell house': { borough: 'Brooklyn', neighborhood: 'Gowanus' },
+  'elsewhere': { borough: 'Brooklyn', neighborhood: 'Bushwick' },
+  'market hotel': { borough: 'Brooklyn', neighborhood: 'Bushwick' },
+  'house of yes': { borough: 'Brooklyn', neighborhood: 'Bushwick' },
+  'brooklyn made': { borough: 'Brooklyn', neighborhood: 'Bushwick' },
+  'sultan room': { borough: 'Brooklyn', neighborhood: 'Bushwick' },
+  'kings theatre': { borough: 'Brooklyn', neighborhood: 'Flatbush' },
+  'barclays center': { borough: 'Brooklyn', neighborhood: 'Prospect Heights' },
+  'bam': { borough: 'Brooklyn', neighborhood: 'Fort Greene' },
+  'brooklyn academy of music': { borough: 'Brooklyn', neighborhood: 'Fort Greene' },
+  'brooklyn museum': { borough: 'Brooklyn', neighborhood: 'Prospect Heights' },
+  'pioneer works': { borough: 'Brooklyn', neighborhood: 'Red Hook' },
+  'st. ann\'s warehouse': { borough: 'Brooklyn', neighborhood: 'DUMBO' },
+  'saint ann': { borough: 'Brooklyn', neighborhood: 'DUMBO' },
+  'littlefield': { borough: 'Brooklyn', neighborhood: 'Gowanus' },
+  'union hall': { borough: 'Brooklyn', neighborhood: 'Park Slope' },
+  'public records': { borough: 'Brooklyn', neighborhood: 'Gowanus' },
+  'good room': { borough: 'Brooklyn', neighborhood: 'Greenpoint' },
+  'gold sounds': { borough: 'Brooklyn', neighborhood: 'Bushwick' },
+  'alphaville': { borough: 'Brooklyn', neighborhood: 'Bushwick' },
+  'pete\'s candy store': { borough: 'Brooklyn', neighborhood: 'Williamsburg' },
+  'tv eye': { borough: 'Brooklyn', neighborhood: 'Ridgewood' },
+  'tiny cupboard': { borough: 'Brooklyn', neighborhood: 'Williamsburg' },
+  'silo brooklyn': { borough: 'Brooklyn', neighborhood: 'Bushwick' },
+  'the gutter': { borough: 'Brooklyn', neighborhood: 'Williamsburg' },
+  'skinny dennis': { borough: 'Brooklyn', neighborhood: 'Williamsburg' },
+  'friends & lovers': { borough: 'Brooklyn', neighborhood: 'Crown Heights' },
+  'hank\'s saloon': { borough: 'Brooklyn', neighborhood: 'Downtown Brooklyn' },
+  'c\'mon everybody': { borough: 'Brooklyn', neighborhood: 'Bed-Stuy' },
+  'knockdown center': { borough: 'Queens', neighborhood: 'Maspeth' },
+  'avant gardner': { borough: 'Brooklyn', neighborhood: 'East Williamsburg' },
+  'brooklyn comedy collective': { borough: 'Brooklyn', neighborhood: 'Williamsburg' },
+
+  // Manhattan venues
+  'bowery ballroom': { borough: 'Manhattan', neighborhood: 'Lower East Side' },
+  'mercury lounge': { borough: 'Manhattan', neighborhood: 'Lower East Side' },
+  'webster hall': { borough: 'Manhattan', neighborhood: 'East Village' },
+  'irving plaza': { borough: 'Manhattan', neighborhood: 'Union Square' },
+  'terminal 5': { borough: 'Manhattan', neighborhood: 'Hell\'s Kitchen' },
+  'sony hall': { borough: 'Manhattan', neighborhood: 'Midtown' },
+  'gramercy theatre': { borough: 'Manhattan', neighborhood: 'Gramercy' },
+  'beacon theatre': { borough: 'Manhattan', neighborhood: 'Upper West Side' },
+  'madison square garden': { borough: 'Manhattan', neighborhood: 'Midtown' },
+  'msg': { borough: 'Manhattan', neighborhood: 'Midtown' },
+  'radio city': { borough: 'Manhattan', neighborhood: 'Midtown' },
+  'carnegie hall': { borough: 'Manhattan', neighborhood: 'Midtown' },
+  'lincoln center': { borough: 'Manhattan', neighborhood: 'Upper West Side' },
+  'apollo theater': { borough: 'Manhattan', neighborhood: 'Harlem' },
+  'town hall': { borough: 'Manhattan', neighborhood: 'Midtown' },
+  'symphony space': { borough: 'Manhattan', neighborhood: 'Upper West Side' },
+  'city winery': { borough: 'Manhattan', neighborhood: 'Hudson Square' },
+  'joe\'s pub': { borough: 'Manhattan', neighborhood: 'East Village' },
+  'le poisson rouge': { borough: 'Manhattan', neighborhood: 'Greenwich Village' },
+  'cutting room': { borough: 'Manhattan', neighborhood: 'Midtown' },
+  'blue note': { borough: 'Manhattan', neighborhood: 'Greenwich Village' },
+  'village vanguard': { borough: 'Manhattan', neighborhood: 'Greenwich Village' },
+  'the stone': { borough: 'Manhattan', neighborhood: 'East Village' },
+  'the delancey': { borough: 'Manhattan', neighborhood: 'Lower East Side' },
+  'arlene\'s grocery': { borough: 'Manhattan', neighborhood: 'Lower East Side' },
+  'otto\'s shrunken head': { borough: 'Manhattan', neighborhood: 'East Village' },
+  'drom': { borough: 'Manhattan', neighborhood: 'East Village' },
+  'cafe wha': { borough: 'Manhattan', neighborhood: 'Greenwich Village' },
+  'rockwood music hall': { borough: 'Manhattan', neighborhood: 'Lower East Side' },
+  'bowery electric': { borough: 'Manhattan', neighborhood: 'Lower East Side' },
+  'pianos': { borough: 'Manhattan', neighborhood: 'Lower East Side' },
+  'nublu': { borough: 'Manhattan', neighborhood: 'East Village' },
+  'chelsea music hall': { borough: 'Manhattan', neighborhood: 'Chelsea' },
+  'bitter end': { borough: 'Manhattan', neighborhood: 'Greenwich Village' },
+  'moma': { borough: 'Manhattan', neighborhood: 'Midtown' },
+  'museum of modern art': { borough: 'Manhattan', neighborhood: 'Midtown' },
+  'the met': { borough: 'Manhattan', neighborhood: 'Upper East Side' },
+  'metropolitan museum': { borough: 'Manhattan', neighborhood: 'Upper East Side' },
+  'guggenheim': { borough: 'Manhattan', neighborhood: 'Upper East Side' },
+  'whitney': { borough: 'Manhattan', neighborhood: 'Meatpacking District' },
+  'the frick': { borough: 'Manhattan', neighborhood: 'Upper East Side' },
+  'morgan library': { borough: 'Manhattan', neighborhood: 'Murray Hill' },
+  'new museum': { borough: 'Manhattan', neighborhood: 'Lower East Side' },
+  'studio museum': { borough: 'Manhattan', neighborhood: 'Harlem' },
+  'amnh': { borough: 'Manhattan', neighborhood: 'Upper West Side' },
+  'american museum of natural history': { borough: 'Manhattan', neighborhood: 'Upper West Side' },
+  'ny historical': { borough: 'Manhattan', neighborhood: 'Upper West Side' },
+  'museum of the city': { borough: 'Manhattan', neighborhood: 'Upper East Side' },
+  'gotham comedy': { borough: 'Manhattan', neighborhood: 'Chelsea' },
+  'new york comedy club': { borough: 'Manhattan', neighborhood: 'East Village' },
+  'the stand': { borough: 'Manhattan', neighborhood: 'Union Square' },
+  'comic strip live': { borough: 'Manhattan', neighborhood: 'Upper East Side' },
+  'broadway comedy club': { borough: 'Manhattan', neighborhood: 'Midtown' },
+  'westside comedy': { borough: 'Manhattan', neighborhood: 'Upper West Side' },
+  'caveat': { borough: 'Manhattan', neighborhood: 'Lower East Side' },
+  'sob\'s': { borough: 'Manhattan', neighborhood: 'Hudson Square' },
+  'cielo': { borough: 'Manhattan', neighborhood: 'Meatpacking District' },
+  'marquee': { borough: 'Manhattan', neighborhood: 'Chelsea' },
+  'le bain': { borough: 'Manhattan', neighborhood: 'Meatpacking District' },
+  'the duplex': { borough: 'Manhattan', neighborhood: 'Greenwich Village' },
+  'don\'t tell mama': { borough: 'Manhattan', neighborhood: 'Midtown' },
+  '54 below': { borough: 'Manhattan', neighborhood: 'Midtown' },
+  'slipper room': { borough: 'Manhattan', neighborhood: 'Lower East Side' },
+  'sid gold': { borough: 'Manhattan', neighborhood: 'Midtown' },
+  'ars nova': { borough: 'Manhattan', neighborhood: 'Hell\'s Kitchen' },
+  'dead rabbit': { borough: 'Manhattan', neighborhood: 'Financial District' },
+  'arthur\'s tavern': { borough: 'Manhattan', neighborhood: 'Greenwich Village' },
+  'parkside lounge': { borough: 'Manhattan', neighborhood: 'Lower East Side' },
+  'club cumming': { borough: 'Manhattan', neighborhood: 'East Village' },
+  'bathtub gin': { borough: 'Manhattan', neighborhood: 'Chelsea' },
+  'berlin': { borough: 'Manhattan', neighborhood: 'East Village' },
+  'the iridium': { borough: 'Manhattan', neighborhood: 'Midtown' },
+  'zinc bar': { borough: 'Manhattan', neighborhood: 'Greenwich Village' },
+  'terra blues': { borough: 'Manhattan', neighborhood: 'Greenwich Village' },
+  'village underground': { borough: 'Manhattan', neighborhood: 'Greenwich Village' },
+  'dizzy\'s club': { borough: 'Manhattan', neighborhood: 'Midtown' },
+  'smoke jazz': { borough: 'Manhattan', neighborhood: 'Upper West Side' },
+  'birdland': { borough: 'Manhattan', neighborhood: 'Midtown' },
+  'smalls': { borough: 'Manhattan', neighborhood: 'Greenwich Village' },
+  'mezzrow': { borough: 'Manhattan', neighborhood: 'Greenwich Village' },
+  'the django': { borough: 'Manhattan', neighborhood: 'Tribeca' },
+  'eastville comedy': { borough: 'Manhattan', neighborhood: 'East Village' },
+  'magnet theater': { borough: 'Manhattan', neighborhood: 'Chelsea' },
+  'ucb': { borough: 'Manhattan', neighborhood: 'East Village' },
+  'the pit': { borough: 'Manhattan', neighborhood: 'Midtown' },
+  '92nd street y': { borough: 'Manhattan', neighborhood: 'Upper East Side' },
+  '92ny': { borough: 'Manhattan', neighborhood: 'Upper East Side' },
+  'new york city center': { borough: 'Manhattan', neighborhood: 'Midtown' },
+  'city center': { borough: 'Manhattan', neighborhood: 'Midtown' },
+  'warsaw': { borough: 'Brooklyn', neighborhood: 'Greenpoint' },
+
+  // Queens venues
+  'queens theatre': { borough: 'Queens', neighborhood: 'Flushing' },
+  'flushing town hall': { borough: 'Queens', neighborhood: 'Flushing' },
+  'nowadays': { borough: 'Queens', neighborhood: 'Ridgewood' },
+  'trans-pecos': { borough: 'Queens', neighborhood: 'Ridgewood' },
+  'ubs arena': { borough: 'Queens', neighborhood: 'Elmont' },
+  'forest hills stadium': { borough: 'Queens', neighborhood: 'Forest Hills' },
+  'nebula': { borough: 'Queens', neighborhood: 'Ridgewood' },
+};
+
+// Static fallback lookup
 function parseLocationStatic(location: string): {
   borough?: string;
   neighborhood?: string;
@@ -319,7 +467,17 @@ function parseLocationStatic(location: string): {
 
   const locationLower = location.toLowerCase();
 
-  // First, try to match specific neighborhoods
+  // First, try known venue names
+  for (const [venue, mapping] of Object.entries(VENUE_NEIGHBORHOOD_MAP)) {
+    if (locationLower.includes(venue)) {
+      const neighborhoodKey = mapping.neighborhood.toLowerCase();
+      const coords = NEIGHBORHOOD_COORDS[neighborhoodKey] ||
+        BOROUGH_CENTERS[mapping.borough as keyof typeof BOROUGH_CENTERS];
+      return { ...mapping, ...coords };
+    }
+  }
+
+  // Then try to match specific neighborhood names in the address
   for (const [key, value] of Object.entries(LOCATION_MAPPINGS)) {
     if (locationLower.includes(key)) {
       // Get coordinates if available
