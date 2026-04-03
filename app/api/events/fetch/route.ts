@@ -706,7 +706,8 @@ For each event, provide:
 - description: Brief description (2-3 sentences max)
 - date: The event date in YYYY-MM-DD format (e.g. "2026-02-15"). For multi-day events, use the START date.
 - time: FULL date and time (MUST include the MONTH and DAY NUMBER like "November 9" or "Dec 15", plus the time like "7:00 PM". NEVER use day-of-week names like "Saturday" or "Thursday" alone!)
-- location: Where it takes place (be specific, include neighborhood or venue name)
+- location: Full address or venue name with address (e.g. "Brooklyn Steel, 319 Frost St, Brooklyn, NY 11222")
+- neighborhood: The NYC neighborhood where the event takes place (e.g. "Williamsburg", "East Village", "Bushwick", "SoHo", "Midtown", "Park Slope", "Astoria"). Infer from the venue address or name. Use common NYC neighborhood names.
 - category: Choose ONE category that best fits the event from these options: "Cultural & Arts", "Fitness & Wellness", "Sports & Recreation", "Markets & Shopping", "Community & Volunteering", "Food & Dining", "Holiday & Seasonal", "Professional & Networking", "Educational & Literary"
 - link: URL to event page (if available)
 - ticketLink: URL to buy tickets (if available)
@@ -730,7 +731,7 @@ OTHER REQUIREMENTS:
 
 Return ONLY a valid JSON array of events, nothing else. NO explanatory text, NO comments.
 Format:
-[{"title":"...","date":"YYYY-MM-DD","description":"...","time":"...","location":"...","category":"...","link":"...","ticketLink":"..."}]
+[{"title":"...","date":"YYYY-MM-DD","description":"...","time":"...","location":"...","neighborhood":"...","category":"...","link":"...","ticketLink":"..."}]
 
 Content to parse:
 ${scrapedContent.substring(0, 200000)}`,
@@ -819,8 +820,8 @@ ${scrapedContent.substring(0, 200000)}`,
                 ...event,
                 time: inferredTime,
                 date,
-                borough,
-                neighborhood,
+                borough: borough || event.borough,
+                neighborhood: neighborhood || event.neighborhood,
                 lat,
                 lng,
               };
@@ -1169,7 +1170,8 @@ For the event, provide:
 - description: Brief description (2-3 sentences max)
 - date: The event date in YYYY-MM-DD format (e.g. "2026-02-15"). For multi-day events, use the START date.
 - time: FULL date and time (MUST include MONTH and DAY NUMBER like "November 9", plus time like "7:00 PM". NEVER use day-of-week names like "Saturday" alone!)
-- location: Where it takes place (be specific, include venue name)
+- location: Full address or venue name with address (e.g. "Brooklyn Steel, 319 Frost St, Brooklyn, NY 11222")
+- neighborhood: The NYC neighborhood where the event takes place (e.g. "Williamsburg", "East Village", "Bushwick", "SoHo", "Midtown", "Park Slope", "Astoria"). Infer from the venue address or name. Use common NYC neighborhood names.
 - category: Choose ONE category that best fits the event from these options: "Cultural & Arts", "Fitness & Wellness", "Sports & Recreation", "Markets & Shopping", "Community & Volunteering", "Food & Dining", "Holiday & Seasonal", "Professional & Networking", "Educational & Literary"
 - link: Use this exact URL: ${detailUrl}
 - ticketLink: URL to buy tickets (if available)
@@ -1182,7 +1184,7 @@ CRITICAL REQUIREMENTS:
 
 Return ONLY a valid JSON object for this single event, nothing else. NO explanatory text, NO comments.
 Format:
-{"title":"...","date":"YYYY-MM-DD","description":"...","time":"...","location":"...","category":"...","link":"...","ticketLink":"..."}
+{"title":"...","date":"YYYY-MM-DD","description":"...","time":"...","location":"...","neighborhood":"...","category":"...","link":"...","ticketLink":"..."}
 
 Content to parse:
 ${scrapedContent.substring(0, 100000)}`,
@@ -1217,7 +1219,7 @@ ${scrapedContent.substring(0, 100000)}`,
                 const { borough, neighborhood, lat, lng } = await parseLocation(e.location || '', false);
                 const inferredTime = inferDateFromDayOfWeek(e.time || '');
                 const date = inferDateField({ ...e, time: inferredTime });
-                return { ...e, time: inferredTime, date, borough, neighborhood, lat, lng };
+                return { ...e, time: inferredTime, date, borough: borough || e.borough, neighborhood: neighborhood || e.neighborhood, lat, lng };
               })
             );
 
@@ -1333,7 +1335,8 @@ For each event, provide:
 - description: Brief description (2-3 sentences max)
 - date: The event date in YYYY-MM-DD format (e.g. "2026-02-15"). For multi-day events, use the START date.
 - time: FULL date and time (MUST include the MONTH and DAY NUMBER like "November 9" or "Dec 15", plus the time like "7:00 PM". NEVER use day-of-week names like "Saturday" or "Thursday" alone!)
-- location: Where it takes place (be specific, include neighborhood or venue name)
+- location: Full address or venue name with address (e.g. "Brooklyn Steel, 319 Frost St, Brooklyn, NY 11222")
+- neighborhood: The NYC neighborhood where the event takes place (e.g. "Williamsburg", "East Village", "Bushwick", "SoHo", "Midtown", "Park Slope", "Astoria"). Infer from the venue address or name. Use common NYC neighborhood names.
 - category: Choose ONE category that best fits the event from these options: "Cultural & Arts", "Fitness & Wellness", "Sports & Recreation", "Markets & Shopping", "Community & Volunteering", "Food & Dining", "Holiday & Seasonal", "Professional & Networking", "Educational & Literary"
 - link: URL to event page (if available)
 - ticketLink: URL to buy tickets (if available)
@@ -1357,7 +1360,7 @@ OTHER REQUIREMENTS:
 
 Return ONLY a valid JSON array of events, nothing else. NO explanatory text, NO comments.
 Format:
-[{"title":"...","date":"YYYY-MM-DD","description":"...","time":"...","location":"...","category":"...","link":"...","ticketLink":"..."}]
+[{"title":"...","date":"YYYY-MM-DD","description":"...","time":"...","location":"...","neighborhood":"...","category":"...","link":"...","ticketLink":"..."}]
 
 Content to parse:
 ${scrapedContent.substring(0, 200000)}`,
@@ -1445,8 +1448,8 @@ ${scrapedContent.substring(0, 200000)}`,
                   ...event,
                   time: inferredTime,
                   date,
-                  borough,
-                  neighborhood,
+                  borough: borough || event.borough,
+                  neighborhood: neighborhood || event.neighborhood,
                   lat,
                   lng,
                 };
