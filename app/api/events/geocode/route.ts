@@ -45,24 +45,30 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Find events without coordinates
-    const eventsNeedingGeocode = cachedData.events.filter(
-      event => !event.lat || !event.lng
-    );
+    // Check if we should backfill neighborhoods (via ?backfill=neighborhoods query param)
+    const url = new URL(request.url);
+    const backfillNeighborhoods = url.searchParams.get('backfill') === 'neighborhoods';
 
-    console.log(`[Geocode] Found ${eventsNeedingGeocode.length} events needing geocoding`);
+    // Find events needing work: either missing coords, or missing neighborhood (if backfilling)
+    const eventsNeedingGeocode = cachedData.events.filter(event => {
+      if (!event.lat || !event.lng) return true;
+      if (backfillNeighborhoods && !event.neighborhood) return true;
+      return false;
+    });
+
+    console.log(`[Geocode] Found ${eventsNeedingGeocode.length} events needing processing (backfill=${backfillNeighborhoods})`);
 
     if (eventsNeedingGeocode.length === 0) {
       return NextResponse.json({
         success: true,
-        message: 'All events already have coordinates',
+        message: 'All events already have coordinates and neighborhoods',
         geocoded: 0,
         remaining: 0
       });
     }
 
-    // Process up to 10 events in this batch (with 1 req/sec rate limit = ~10 seconds)
-    const BATCH_SIZE = 10;
+    // Process up to 50 for neighborhood backfill (static only, fast), 10 for geocoding
+    const BATCH_SIZE = backfillNeighborhoods ? 50 : 10;
     const batch = eventsNeedingGeocode.slice(0, BATCH_SIZE);
 
     console.log(`[Geocode] Processing batch of ${batch.length} events`);
@@ -72,9 +78,10 @@ export async function POST(request: NextRequest) {
     // Geocode each event in the batch
     const geocodedBatch = await Promise.all(
       batch.map(async (event) => {
+        const hasCoords = event.lat && event.lng;
         const { borough, neighborhood, lat, lng } = await parseLocation(
           event.location || '',
-          true // Enable geocoding
+          !hasCoords // Only geocode if missing coords; skip for neighborhood-only backfill
         );
 
         if (lat && lng) {
