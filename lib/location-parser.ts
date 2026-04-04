@@ -446,6 +446,15 @@ const VENUE_NEIGHBORHOOD_MAP: Record<string, { borough: string; neighborhood: st
   'city center': { borough: 'Manhattan', neighborhood: 'Midtown' },
   'warsaw': { borough: 'Brooklyn', neighborhood: 'Greenpoint' },
 
+  // Venues from liquor license data
+  'silvana': { borough: 'Manhattan', neighborhood: 'Harlem' },
+  'united palace': { borough: 'Manhattan', neighborhood: 'Washington Heights' },
+  'the shed': { borough: 'Manhattan', neighborhood: 'Hudson Yards' },
+  'asylum nyc': { borough: 'Manhattan', neighborhood: 'Flatiron' },
+  'salsa con fuego': { borough: 'The Bronx', neighborhood: 'Kingsbridge' },
+  'pig beach': { borough: 'Queens', neighborhood: 'Long Island City' },
+  'club amadeus': { borough: 'Queens', neighborhood: 'Glendale' },
+
   // Queens venues
   'queens theatre': { borough: 'Queens', neighborhood: 'Flushing' },
   'flushing town hall': { borough: 'Queens', neighborhood: 'Flushing' },

@@ -170,6 +170,14 @@ const EVENT_URLS = [
   'https://www.socratessculpturepark.org/event',
   'https://www.thetranspecos.com/',
   'https://www.footlightunderground.com/',
+  // Venues discovered from NYC liquor license data:
+  'https://silvana-nyc.com/calendar.php',
+  'https://unitedpalace.org/events/',
+  'https://theshed.org/calendar',
+  'https://calendar.asylumnyc.com/',
+  'https://salsaconfuego.com/events/',
+  'https://www.pigbeachnyc.com/queens-ny-events/',
+  'https://clubamadeus.com/events/',
   // College/University Events & Talks:
   'https://events.nyu.edu/',
   'https://nyuskirball.org/events/',
