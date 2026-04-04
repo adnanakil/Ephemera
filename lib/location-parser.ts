@@ -455,6 +455,26 @@ const VENUE_NEIGHBORHOOD_MAP: Record<string, { borough: string; neighborhood: st
   'pig beach': { borough: 'Queens', neighborhood: 'Long Island City' },
   'club amadeus': { borough: 'Queens', neighborhood: 'Glendale' },
 
+  // Venues from liquor license cross-reference
+  'palladium times square': { borough: 'Manhattan', neighborhood: 'Times Square' },
+  'melrose ballroom': { borough: 'Queens', neighborhood: 'Astoria' },
+  'st. george theatre': { borough: 'Staten Island', neighborhood: 'St. George' },
+  'st george theatre': { borough: 'Staten Island', neighborhood: 'St. George' },
+  'crown hill theatre': { borough: 'Brooklyn', neighborhood: 'Crown Heights' },
+  'bronx music hall': { borough: 'The Bronx', neighborhood: 'Morrisania' },
+  'irish arts center': { borough: 'Manhattan', neighborhood: "Hell's Kitchen" },
+  'society of illustrators': { borough: 'Manhattan', neighborhood: 'Upper East Side' },
+  'perelman': { borough: 'Manhattan', neighborhood: 'Financial District' },
+  'pac nyc': { borough: 'Manhattan', neighborhood: 'Financial District' },
+  'national arts club': { borough: 'Manhattan', neighborhood: 'Gramercy' },
+  'estonian house': { borough: 'Manhattan', neighborhood: 'Murray Hill' },
+  'korea society': { borough: 'Manhattan', neighborhood: 'Midtown' },
+  'kiss ultra': { borough: 'Queens', neighborhood: 'Richmond Hill' },
+  'la nacional': { borough: 'Manhattan', neighborhood: 'Chelsea' },
+  'dctv': { borough: 'Manhattan', neighborhood: 'Chinatown' },
+  'salmagundi': { borough: 'Manhattan', neighborhood: 'Greenwich Village' },
+  'brooklyn monarch': { borough: 'Brooklyn', neighborhood: 'East Williamsburg' },
+
   // Queens venues
   'queens theatre': { borough: 'Queens', neighborhood: 'Flushing' },
   'flushing town hall': { borough: 'Queens', neighborhood: 'Flushing' },
